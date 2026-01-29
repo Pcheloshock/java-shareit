@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -15,14 +14,14 @@ public class ItemController {
 
     @PostMapping
     public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") Long userId,
-                              @Valid @RequestBody ItemDto itemDto) {
+                              @RequestBody ItemDto itemDto) {
         return itemService.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @PathVariable Long itemId,
-                              @Valid @RequestBody ItemDto itemDto) {
+                              @RequestBody ItemDto itemDto) {
         return itemService.updateItem(userId, itemId, itemDto);
     }
 
@@ -37,7 +36,7 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam String text) {
+    public List<ItemDto> searchItems(@RequestParam(required = false) String text) {
         return itemService.searchItems(text);
     }
 }

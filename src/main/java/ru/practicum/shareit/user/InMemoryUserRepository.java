@@ -28,4 +28,9 @@ public class InMemoryUserRepository {
     public void deleteById(Long id) {
         users.remove(id);
     }
+
+    public boolean existsById(Long id) {
+        return users.containsKey(id);
+    }
 }
+

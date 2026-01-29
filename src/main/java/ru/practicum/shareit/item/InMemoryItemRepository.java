@@ -48,4 +48,8 @@ public class InMemoryItemRepository {
         }
         return result;
     }
+
+    public boolean existsById(Long id) {
+        return items.containsKey(id);
+    }
 }

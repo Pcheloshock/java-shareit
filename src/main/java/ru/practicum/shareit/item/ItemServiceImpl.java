@@ -2,6 +2,8 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
@@ -16,10 +18,26 @@ public class ItemServiceImpl implements ItemService {
     private final InMemoryItemRepository itemRepository;
     private final InMemoryUserRepository userRepository;
 
+    private void validateItem(ItemDto itemDto, boolean isUpdate) {
+        if (!isUpdate && (itemDto.getName() == null || itemDto.getName().isBlank())) {
+            throw new ValidationException("Название не может быть пустым");
+        }
+
+        if (!isUpdate && (itemDto.getDescription() == null || itemDto.getDescription().isBlank())) {
+            throw new ValidationException("Описание не может быть пустым");
+        }
+
+        if (!isUpdate && itemDto.getAvailable() == null) {
+            throw new ValidationException("Статус доступности должен быть указан");
+        }
+    }
+
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
+        validateItem(itemDto, false);
+
         User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Пользователь с ID " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
 
         Item item = ItemMapper.toItem(itemDto, owner);
         Item savedItem = itemRepository.save(item);
@@ -29,16 +47,16 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Вещь с ID " + itemId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
 
         if (!item.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("Только владелец может редактировать вещь");
+            throw new NotFoundException("Только владелец может редактировать вещь");
         }
 
-        if (itemDto.getName() != null) {
+        if (itemDto.getName() != null && !itemDto.getName().isBlank()) {
             item.setName(itemDto.getName());
         }
-        if (itemDto.getDescription() != null) {
+        if (itemDto.getDescription() != null && !itemDto.getDescription().isBlank()) {
             item.setDescription(itemDto.getDescription());
         }
         if (itemDto.getAvailable() != null) {
@@ -52,12 +70,15 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemById(Long itemId) {
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Вещь с ID " + itemId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
         return ItemMapper.toItemDto(item);
     }
 
     @Override
     public List<ItemDto> getItemsByOwner(Long ownerId) {
+        if (!userRepository.existsById(ownerId)) {
+            throw new NotFoundException("Пользователь с ID " + ownerId + " не найден");
+        }
         return itemRepository.findByOwnerId(ownerId).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
