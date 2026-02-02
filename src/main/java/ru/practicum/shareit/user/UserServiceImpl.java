@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final InMemoryUserRepository userRepository;
-
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
 
     private void validateUser(UserDto userDto, boolean isUpdate) {
@@ -35,11 +34,11 @@ public class UserServiceImpl implements UserService {
     }
 
     private void checkEmailUniqueness(String email, Long userId) {
-        for (User user : userRepository.findAll()) {
-            if (user.getEmail().equals(email) && !user.getId().equals(userId)) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            if (!user.getId().equals(userId)) {
                 throw new ConflictException("Пользователь с email " + email + " уже существует");
             }
-        }
+        });
     }
 
     @Override

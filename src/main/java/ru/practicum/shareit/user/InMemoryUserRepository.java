@@ -32,5 +32,11 @@ public class InMemoryUserRepository {
     public boolean existsById(Long id) {
         return users.containsKey(id);
     }
-}
 
+    // Метод для проверки уникальности email
+    public Optional<User> findByEmail(String email) {
+        return users.values().stream()
+                .filter(user -> user.getEmail().equals(email))
+                .findFirst();
+    }
+}

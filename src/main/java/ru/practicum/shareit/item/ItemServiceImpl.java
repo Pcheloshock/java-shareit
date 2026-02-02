@@ -7,7 +7,7 @@ import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.InMemoryUserRepository;
+import ru.practicum.shareit.user.UserService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final InMemoryItemRepository itemRepository;
-    private final InMemoryUserRepository userRepository;
+    private final UserService userService;
 
     private void validateItem(ItemDto itemDto, boolean isUpdate) {
         if (!isUpdate && (itemDto.getName() == null || itemDto.getName().isBlank())) {
@@ -36,8 +36,12 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto createItem(Long userId, ItemDto itemDto) {
         validateItem(itemDto, false);
 
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+        // Проверяем существование пользователя
+        userService.getUserById(userId); // Будет выброшено NotFoundException если нет
+
+        User owner = User.builder()
+                .id(userId)
+                .build();
 
         Item item = ItemMapper.toItem(itemDto, owner);
         Item savedItem = itemRepository.save(item);
@@ -48,6 +52,9 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
+
+        // Проверяем, что пользователь существует
+        userService.getUserById(userId);
 
         if (!item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Только владелец может редактировать вещь");
@@ -76,9 +83,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getItemsByOwner(Long ownerId) {
-        if (!userRepository.existsById(ownerId)) {
-            throw new NotFoundException("Пользователь с ID " + ownerId + " не найден");
-        }
+        // Проверяем, что пользователь существует
+        userService.getUserById(ownerId);
+
         return itemRepository.findByOwnerId(ownerId).stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());

@@ -23,6 +23,8 @@ public class ItemMapper {
                 .description(item.getDescription())
                 .available(item.getAvailable())
                 .requestId(item.getRequestId())
+                // Если нужно, добавьте информацию о владельце
+                // .ownerId(item.getOwner().getId())
                 .build();
     }
 }
