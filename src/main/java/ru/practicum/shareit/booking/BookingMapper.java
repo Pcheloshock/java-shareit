@@ -28,13 +28,24 @@ public class BookingMapper {
     }
 
     public static BookingResponseDto toBookingResponseDto(Booking booking) {
-        return BookingResponseDto.builder()
+        if (booking == null) {
+            return null;
+        }
+
+        BookingResponseDto.BookingResponseDtoBuilder builder = BookingResponseDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
                 .end(booking.getEnd())
-                .item(booking.getItem() != null ? ItemMapper.toItemDto(booking.getItem()) : null)
-                .booker(booking.getBooker() != null ? UserMapper.toUserDto(booking.getBooker()) : null)
-                .status(booking.getStatus())
-                .build();
+                .status(booking.getStatus());
+
+        if (booking.getItem() != null) {
+            builder.item(ItemMapper.toItemDto(booking.getItem()));
+        }
+
+        if (booking.getBooker() != null) {
+            builder.booker(UserMapper.toUserDto(booking.getBooker()));
+        }
+
+        return builder.build();
     }
 }

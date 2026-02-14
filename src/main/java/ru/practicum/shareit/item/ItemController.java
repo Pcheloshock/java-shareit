@@ -15,6 +15,12 @@ import java.util.List;
 public class ItemController {
     private final ItemService itemService;
 
+    @PostMapping
+    public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") Long userId,
+                              @Valid @RequestBody ItemDto itemDto) {
+        return itemService.createItem(userId, itemDto);
+    }
+
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
                                  @PathVariable Long itemId,
