@@ -124,7 +124,6 @@
     </build>
 
     <profiles>
-
         <profile>
             <id>check</id>
             <activation>
@@ -137,40 +136,12 @@
                         <artifactId>maven-checkstyle-plugin</artifactId>
                         <version>${maven-checkstyle-plugin.version}</version>
                         <configuration>
-                            <!-- Используем свой файл конфигурации -->
                             <configLocation>checkstyle.xml</configLocation>
-                            <!-- Не останавливать сборку при ошибках -->
+                            <suppressionsLocation>suppressions.xml</suppressionsLocation>
                             <failsOnError>false</failsOnError>
-                            <!-- Выводить только предупреждения -->
                             <violationSeverity>warning</violationSeverity>
-                            <!-- Включить проверку тестов -->
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <id>validate</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>check</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-checkstyle-plugin</artifactId>
-                        <version>${maven-checkstyle-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>validate</id>
@@ -213,4 +184,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>
