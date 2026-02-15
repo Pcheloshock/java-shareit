@@ -16,12 +16,12 @@ services:
     networks:
       - shareit-network
 
-  app:
+  server:                                  # <--- ИЗМЕНИТЬ: было "app", стало "server"
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: shareit-app
-    restart: always  # <--- Добавлено в правильное место
+    container_name: shareit-server         # <--- ИЗМЕНИТЬ: было "shareit-app", стало "shareit-server"
+    restart: always
     ports:
       - "8080:8080"
     depends_on:
