@@ -16,27 +16,25 @@ services:
     networks:
       - shareit-network
 
-  server:                                  # <--- ИЗМЕНИТЬ: было "app", стало "server"
+  server:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: shareit-server         # <--- ИЗМЕНИТЬ: было "shareit-app", стало "shareit-server"
+    container_name: shareit-server
     restart: always
-    ports:
-      - "8080:8080"
+    network_mode: "host"  # This makes the container use host's network
     depends_on:
       db:
         condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=test
       - SPRING_DATASOURCE_DRIVER=org.postgresql.Driver
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/shareit  # Use localhost
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
       - SERVER_PORT=8080
-    networks:
-      - shareit-network
+    # Remove ports section when using network_mode: host
 
 networks:
   shareit-network:
