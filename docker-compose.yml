@@ -21,6 +21,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: shareit-app
+    restart: always  # <--- Добавлено в правильное место
     ports:
       - "8080:8080"
     depends_on:
