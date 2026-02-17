@@ -79,23 +79,39 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponseDto approveBooking(Long userId, Long bookingId, Boolean approved) {
+        System.out.println("=== DEBUG: approveBooking called ===");
+        System.out.println("userId: " + userId);
+        System.out.println("bookingId: " + bookingId);
+        System.out.println("approved: " + approved);
+
         // Сначала проверяем существование бронирования
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Бронирование не найдено"));
+                .orElseThrow(() -> {
+                    System.out.println("Booking not found with id: " + bookingId);
+                    return new BookingNotFoundException("Бронирование не найдено");
+                });
+
+        System.out.println("Booking found: " + booking.getId());
+        System.out.println("Item ownerId: " + booking.getItem().getOwner().getId());
 
         // Проверка, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
+            System.out.println("User " + userId + " is not owner. Owner is: " + booking.getItem().getOwner().getId());
             // Используем то же исключение, что и для несуществующего бронирования
             throw new BookingNotFoundException("Бронирование не найдено");
         }
 
         // Проверка статуса
         if (booking.getStatus() != BookingStatus.WAITING) {
+            System.out.println("Booking status is not WAITING: " + booking.getStatus());
             throw new ValidationException("Бронирование уже обработано");
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        return BookingMapper.toBookingResponseDto(bookingRepository.save(booking));
+        Booking savedBooking = bookingRepository.save(booking);
+        System.out.println("Booking saved with status: " + savedBooking.getStatus());
+
+        return BookingMapper.toBookingResponseDto(savedBooking);
     }
 
     @Override
