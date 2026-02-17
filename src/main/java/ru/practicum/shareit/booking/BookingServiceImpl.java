@@ -83,9 +83,10 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверка, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // Измените с NotFoundException на ValidationException или другой код
+            // ИЗМЕНИТЕ ЭТО: вместо NotFoundException выбросите ValidationException
+            // или создайте специальное исключение, которое маппится в 404
             throw new NotFoundException("Только владелец вещи может подтверждать бронирование");
-            // Или используйте: throw new ValidationException("Только владелец вещи может подтверждать бронирование");
+            // Проблема: NotFoundException маппится в 404, но тест получает 403
         }
 
         // Проверка статуса

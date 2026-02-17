@@ -33,7 +33,6 @@ public class ErrorHandler {
             return new ErrorResponse(errorMessage);
         }
 
-        // Для ValidationException и ConstraintViolationException возвращаем обобщенное сообщение
         return new ErrorResponse("Некорректные данные в запросе");
     }
 
@@ -48,7 +47,6 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(final IllegalArgumentException e) {
         log.warn("Некорректный аргумент: {}", e.getMessage(), e);
-        // Возвращаем только для известных безопасных случаев
         String message = e.getMessage();
         if (message != null && (
                 message.contains("Unknown state:") ||
