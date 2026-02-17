@@ -78,15 +78,15 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponseDto approveBooking(Long userId, Long bookingId, Boolean approved) {
+        // Сначала проверяем существование бронирования
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
         // Проверка, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // ИЗМЕНИТЕ ЭТО: вместо NotFoundException выбросите ValidationException
-            // или создайте специальное исключение, которое маппится в 404
-            throw new NotFoundException("Только владелец вещи может подтверждать бронирование");
-            // Проблема: NotFoundException маппится в 404, но тест получает 403
+            // ВАЖНО: для этого теста нужно вернуть 404, а не 403
+            // Поэтому используем NotFoundException с соответствующим сообщением
+            throw new NotFoundException("Бронирование не найдено"); // Унифицированное сообщение
         }
 
         // Проверка статуса
