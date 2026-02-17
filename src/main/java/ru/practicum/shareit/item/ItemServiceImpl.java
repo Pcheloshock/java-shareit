@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingMapper;
+import ru.practicum.shareit.booking.BookingStatus; // Добавьте этот импорт
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -148,10 +149,13 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        // Проверка, что пользователь действительно брал вещь в аренду
-        boolean hasBooked = bookingRepository.hasUserBookedItem(userId, itemId, LocalDateTime.now());
-        if (!hasBooked) {
-            throw new ValidationException("Пользователь не брал эту вещь в аренду");
+        // Проверка, что пользователь действительно брал вещь в аренду И бронирование завершено
+        LocalDateTime now = LocalDateTime.now();
+        boolean hasBookedAndCompleted = bookingRepository.existsByBookerIdAndItemIdAndEndBeforeAndStatus(
+                userId, itemId, now, BookingStatus.APPROVED);
+
+        if (!hasBookedAndCompleted) {
+            throw new ValidationException("Пользователь может оставить комментарий только после завершения аренды");
         }
 
         // Создание комментария
@@ -159,7 +163,7 @@ public class ItemServiceImpl implements ItemService {
                 .text(commentDto.getText())
                 .item(item)
                 .author(author)
-                .created(LocalDateTime.now())
+                .created(now)
                 .build();
 
         Comment savedComment = commentRepository.save(comment);

@@ -20,6 +20,7 @@ public interface ItemService {
 
     CommentDto addComment(Long userId, Long itemId, CreateCommentDto commentDto);
 
+    // Добавьте эти методы в интерфейс
     ItemWithBookingsDto getItemWithBookingsById(Long itemId, Long userId);
 
     List<ItemWithBookingsDto> getItemsWithBookingsByOwner(Long ownerId);

@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CreateCommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
+// import ru.practicum.shareit.item.dto.ItemWithBookingsDto; // Если нужно
 
 import java.util.List;
 
@@ -48,5 +50,12 @@ public class ItemController {
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestParam(required = false) String text) {
         return itemService.searchItems(text);
+    }
+
+    @GetMapping("/{itemId}/with-bookings")
+    public ItemWithBookingsDto getItemWithBookingsById(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PathVariable Long itemId) {
+        return itemService.getItemWithBookingsById(itemId, userId);
     }
 }

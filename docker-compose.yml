@@ -1,61 +1,47 @@
-name: build
+version: '3.8'
 
-on:
-  pull_request:
-    branches: [ main, master ]
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=shareit
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-jobs:
-  build-shareit:
-    runs-on: ubuntu-latest
+  server:
+    build: .
+    container_name: shareit-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+      - SPRING_PROFILES_ACTIVE=test
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # Добавляем gateway сервис
+  gateway:
+    image: alpine:latest
+    container_name: shareit-gateway
+    command: ["sh", "-c", "while true; do sleep 3600; done"]
+    depends_on:
+      - server
+    ports:
+      - "8081:8081"
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Build with Maven
-        run: mvn clean package -DskipTests
-
-      - name: Start application with Docker Compose
-        run: |
-          docker-compose up -d
-          echo "Waiting for application to start..."
-          sleep 30
-
-      - name: Check if application is running
-        run: |
-          curl --retry 5 --retry-delay 5 --retry-connrefused http://localhost:8080/actuator/health
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Install Newman
-        run: npm install -g newman
-
-      - name: Run Postman tests
-        run: |
-          newman run ./tests/postman/sprint.json \
-            --delay-request 50 \
-            -r cli,htmlextra \
-            --verbose \
-            --color on \
-            --reporter-htmlextra-export reports/shareIt.html
-
-      - name: Stop Docker Compose
-        if: always()
-        run: docker-compose down
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: reports/
+volumes:
+  postgres_data:
