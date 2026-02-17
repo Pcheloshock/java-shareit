@@ -79,7 +79,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponseDto approveBooking(Long userId, Long bookingId, Boolean approved) {
-        System.out.println("=== DEBUG: approveBooking called ===");
+        System.out.println("=== SERVICE: approveBooking called ===");
         System.out.println("userId: " + userId);
         System.out.println("bookingId: " + bookingId);
         System.out.println("approved: " + approved);
@@ -92,6 +92,7 @@ public class BookingServiceImpl implements BookingService {
                 });
 
         System.out.println("Booking found: " + booking.getId());
+        System.out.println("Booking status: " + booking.getStatus());
         System.out.println("Item ownerId: " + booking.getItem().getOwner().getId());
 
         // Проверка, что пользователь - владелец вещи
@@ -111,7 +112,10 @@ public class BookingServiceImpl implements BookingService {
         Booking savedBooking = bookingRepository.save(booking);
         System.out.println("Booking saved with status: " + savedBooking.getStatus());
 
-        return BookingMapper.toBookingResponseDto(savedBooking);
+        BookingResponseDto dto = BookingMapper.toBookingResponseDto(savedBooking);
+        System.out.println("Returning dto with id: " + (dto != null ? dto.getId() : "null"));
+
+        return dto;
     }
 
     @Override
@@ -221,4 +225,5 @@ public class BookingServiceImpl implements BookingService {
                 .map(BookingMapper::toBookingResponseDto)
                 .collect(Collectors.toList());
     }
+
 }

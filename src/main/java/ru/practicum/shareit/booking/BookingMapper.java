@@ -32,6 +32,8 @@ public class BookingMapper {
             return null;
         }
 
+        System.out.println("Mapping booking: " + booking.getId());
+
         BookingResponseDto.BookingResponseDtoBuilder builder = BookingResponseDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
@@ -40,12 +42,16 @@ public class BookingMapper {
 
         if (booking.getItem() != null) {
             builder.item(ItemMapper.toItemDto(booking.getItem()));
+            System.out.println("Item mapped: " + booking.getItem().getId());
         }
 
         if (booking.getBooker() != null) {
             builder.booker(UserMapper.toUserDto(booking.getBooker()));
+            System.out.println("Booker mapped: " + booking.getBooker().getId());
         }
 
-        return builder.build();
+        BookingResponseDto dto = builder.build();
+        System.out.println("Dto created with id: " + dto.getId());
+        return dto;
     }
 }

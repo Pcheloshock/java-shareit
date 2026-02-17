@@ -36,30 +36,28 @@ public class BookingController {
     public ResponseEntity<BookingResponseDto> approveBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                              @PathVariable Long bookingId,
                                                              @RequestParam Boolean approved) {
+        System.out.println("=== CONTROLLER: approveBooking ===");
+        System.out.println("userId: " + userId);
+        System.out.println("bookingId: " + bookingId);
+        System.out.println("approved: " + approved);
+
         try {
             BookingResponseDto result = bookingService.approveBooking(userId, bookingId, approved);
+            System.out.println("Result: " + (result != null ? result.getId() : "null"));
             return ResponseEntity.ok(result);
         } catch (BookingNotFoundException e) {
-            // Это исключение выбрасывается как для несуществующего бронирования,
-            // так и для попытки подтверждения чужим пользователем
+            System.out.println("BookingNotFoundException: " + e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (NotFoundException e) {
+            System.out.println("NotFoundException: " + e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (ValidationException e) {
+            System.out.println("ValidationException: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
+            System.out.println("Exception: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/{bookingId}")
-    public ResponseEntity<BookingResponseDto> getBookingById(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                             @PathVariable Long bookingId) {
-        try {
-            BookingResponseDto result = bookingService.getBookingById(userId, bookingId);
-            return ResponseEntity.ok(result);
-        } catch (NotFoundException e) {
-            return ResponseEntity.notFound().build();
         }
     }
 
@@ -86,6 +84,21 @@ public class BookingController {
             return ResponseEntity.notFound().build();
         } catch (ValidationException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/debug/{bookingId}")
+    public ResponseEntity<String> debugBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                               @PathVariable Long bookingId) {
+        try {
+            BookingResponseDto booking = bookingService.getBookingById(userId, bookingId);
+            return ResponseEntity.ok("Booking found: " + booking.getId());
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Error: " + e.getMessage() + ", type: " + e.getClass().getSimpleName());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error: " + e.getMessage() + ", type: " + e.getClass().getSimpleName());
         }
     }
 }
