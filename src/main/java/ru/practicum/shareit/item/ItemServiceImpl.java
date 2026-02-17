@@ -78,9 +78,13 @@ public class ItemServiceImpl implements ItemService {
         // Если пользователь - владелец вещи, добавляем информацию о бронированиях
         if (item.getOwner().getId().equals(userId)) {
             addBookingInfo(dto, itemId);
+        } else {
+            // Для не-владельцев добавляем null
+            dto.setLastBooking(null);
+            dto.setNextBooking(null);
         }
 
-        // Добавляем комментарии
+        // Добавляем комментарии для всех пользователей
         addCommentsInfo(dto, itemId);
 
         return dto;

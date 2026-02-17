@@ -38,8 +38,25 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable Long itemId) {
-        return itemService.getItemById(itemId);
+    public ItemWithBookingsDto getItemById(@RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId,
+                                           @PathVariable Long itemId) {
+        if (userId != null) {
+            return itemService.getItemWithBookingsById(itemId, userId);
+        }
+        // Если userId не передан, возвращаем обычный ItemDto, преобразованный в ItemWithBookingsDto
+        ItemDto itemDto = itemService.getItemById(itemId);
+        return convertToItemWithBookingsDto(itemDto);
+    }
+
+    private ItemWithBookingsDto convertToItemWithBookingsDto(ItemDto itemDto) {
+        return ItemWithBookingsDto.builder()
+                .id(itemDto.getId())
+                .name(itemDto.getName())
+                .description(itemDto.getDescription())
+                .available(itemDto.getAvailable())
+                .requestId(itemDto.getRequestId())
+                .comments(List.of()) // Пустой список комментариев
+                .build();
     }
 
     @GetMapping
