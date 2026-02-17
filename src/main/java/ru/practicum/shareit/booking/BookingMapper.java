@@ -1,22 +1,55 @@
 package ru.practicum.shareit.booking;
 
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.item.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserMapper;
 
 public class BookingMapper {
 
-    public static Booking toBooking(BookingDto bookingDto) {
+    public static Booking toBooking(BookingDto bookingDto, Item item, User booker) {
         return Booking.builder()
                 .id(bookingDto.getId())
                 .start(bookingDto.getStart())
                 .end(bookingDto.getEnd())
-                .status(bookingDto.getStatus())
+                .item(item)
+                .booker(booker)
+                .status(bookingDto.getStatus() != null ? bookingDto.getStatus() : BookingStatus.WAITING)
                 .build();
     }
 
     public static BookingDto toBookingDto(Booking booking) {
+        if (booking == null) {
+            return null;
+        }
+
+        BookingDto.BookingDtoBuilder builder = BookingDto.builder()
+                .id(booking.getId())
+                .start(booking.getStart())
+                .end(booking.getEnd())
+                .status(booking.getStatus());
+
+        // Для ответа всегда включаем полные объекты
+        if (booking.getItem() != null) {
+            builder.item(ItemMapper.toItemDto(booking.getItem()));
+            builder.itemId(booking.getItem().getId()); // Для обратной совместимости
+        }
+
+        if (booking.getBooker() != null) {
+            builder.booker(UserMapper.toUserDto(booking.getBooker()));
+            builder.bookerId(booking.getBooker().getId()); // Для обратной совместимости
+        }
+
+        return builder.build();
+    }
+
+    // Метод для создания из запроса (когда нужны только ID)
+    public static BookingDto toSimpleDto(Booking booking) {
+        if (booking == null) {
+            return null;
+        }
+
         return BookingDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
@@ -25,33 +58,5 @@ public class BookingMapper {
                 .bookerId(booking.getBooker() != null ? booking.getBooker().getId() : null)
                 .status(booking.getStatus())
                 .build();
-    }
-
-    public static BookingResponseDto toBookingResponseDto(Booking booking) {
-        if (booking == null) {
-            return null;
-        }
-
-        System.out.println("Mapping booking: " + booking.getId());
-
-        BookingResponseDto.BookingResponseDtoBuilder builder = BookingResponseDto.builder()
-                .id(booking.getId())
-                .start(booking.getStart())
-                .end(booking.getEnd())
-                .status(booking.getStatus());
-
-        if (booking.getItem() != null) {
-            builder.item(ItemMapper.toItemDto(booking.getItem()));
-            System.out.println("Item mapped: " + booking.getItem().getId());
-        }
-
-        if (booking.getBooker() != null) {
-            builder.booker(UserMapper.toUserDto(booking.getBooker()));
-            System.out.println("Booker mapped: " + booking.getBooker().getId());
-        }
-
-        BookingResponseDto dto = builder.build();
-        System.out.println("Dto created with id: " + dto.getId());
-        return dto;
     }
 }

@@ -11,14 +11,11 @@ import java.util.List;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // Поиск бронирований по пользователю (booker)
     List<Booking> findByBookerId(Long bookerId, Sort sort);
 
-    // Поиск бронирований по владельцу вещи
     @Query("SELECT b FROM Booking b WHERE b.item.owner.id = :ownerId")
     List<Booking> findByItemOwnerId(@Param("ownerId") Long ownerId, Sort sort);
 
-    // Поиск по статусу
     List<Booking> findByBookerIdAndStatus(Long bookerId, BookingStatus status, Sort sort);
 
     List<Booking> findByBookerIdAndStartBeforeAndEndAfter(
@@ -28,7 +25,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByBookerIdAndStartAfter(Long bookerId, LocalDateTime start, Sort sort);
 
-    // Для проверки существования бронирований пользователя на вещь
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END FROM Booking b " +
             "WHERE b.booker.id = :userId AND b.item.id = :itemId " +
             "AND b.status = 'APPROVED' AND b.end < :now")
@@ -36,7 +32,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                               @Param("itemId") Long itemId,
                               @Param("now") LocalDateTime now);
 
-    // Для получения последнего и следующего бронирования вещи
+    // Оптимизированные методы для получения последних и следующих бронирований для нескольких вещей
+    @Query("SELECT b FROM Booking b " +
+            "WHERE b.item.id IN :itemIds AND b.status = 'APPROVED' " +
+            "AND b.start < :now " +
+            "ORDER BY b.start DESC")
+    List<Booking> findLastBookingsForItems(@Param("itemIds") List<Long> itemIds,
+                                           @Param("now") LocalDateTime now);
+
+    @Query("SELECT b FROM Booking b " +
+            "WHERE b.item.id IN :itemIds AND b.status = 'APPROVED' " +
+            "AND b.start > :now " +
+            "ORDER BY b.start ASC")
+    List<Booking> findNextBookingsForItems(@Param("itemIds") List<Long> itemIds,
+                                           @Param("now") LocalDateTime now);
+
     @Query("SELECT b FROM Booking b WHERE b.item.id = :itemId AND b.status = 'APPROVED' " +
             "AND b.start < :now ORDER BY b.start DESC")
     List<Booking> findLastBookings(@Param("itemId") Long itemId, @Param("now") LocalDateTime now);

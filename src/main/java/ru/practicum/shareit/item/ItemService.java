@@ -12,16 +12,13 @@ public interface ItemService {
 
     ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto);
 
-    ItemDto getItemById(Long itemId);
+    ItemWithBookingsDto getItemWithBookingsById(Long itemId, Long userId);
 
     List<ItemDto> getItemsByOwner(Long ownerId);
 
     List<ItemDto> searchItems(String text);
 
     CommentDto addComment(Long userId, Long itemId, CreateCommentDto commentDto);
-
-    // Добавьте эти методы в интерфейс
-    ItemWithBookingsDto getItemWithBookingsById(Long itemId, Long userId);
 
     List<ItemWithBookingsDto> getItemsWithBookingsByOwner(Long ownerId);
 }

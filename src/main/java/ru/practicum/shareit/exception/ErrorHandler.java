@@ -20,10 +20,24 @@ public class ErrorHandler {
         return new ErrorResponse(e.getMessage());
     }
 
+    @ExceptionHandler(BookingNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleBookingNotFoundException(final BookingNotFoundException e) {
+        log.warn("Бронирование не найдено: {}", e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final ValidationException e) {
         log.warn("Ошибка валидации: {}", e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleForbiddenException(final ForbiddenException e) {
+        log.warn("Доступ запрещен: {}", e.getMessage());
         return new ErrorResponse(e.getMessage());
     }
 
@@ -55,13 +69,6 @@ public class ErrorHandler {
         return new ErrorResponse("Unknown state: " + e.getMessage());
     }
 
-    @ExceptionHandler(BookingNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleBookingNotFoundException(final BookingNotFoundException e) {
-        log.warn("Бронирование не найдено: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
-    }
-
     @ExceptionHandler(MissingRequestHeaderException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMissingHeader(final MissingRequestHeaderException e) {
@@ -69,18 +76,9 @@ public class ErrorHandler {
         return new ErrorResponse("Отсутствует обязательный заголовок: " + e.getHeaderName());
     }
 
-    @ExceptionHandler(ForbiddenException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorResponse handleForbiddenException(final ForbiddenException e) {
-        log.warn("Доступ запрещен: {}", e.getMessage());
-        ErrorResponse response = new ErrorResponse(e.getMessage());
-        log.info("Возвращаем ответ с телом: {}", response);
-        return response;
-    }
-
-    @ExceptionHandler
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleOtherExceptions(final Throwable e) {
+    public ErrorResponse handleOtherExceptions(final Exception e) {
         log.error("Внутренняя ошибка сервера", e);
         return new ErrorResponse("Произошла непредвиденная ошибка");
     }
