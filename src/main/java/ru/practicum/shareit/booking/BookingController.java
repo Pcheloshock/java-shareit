@@ -7,10 +7,12 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.exception.BookingNotFoundException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/bookings")
@@ -33,9 +35,9 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public ResponseEntity<BookingResponseDto> approveBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                             @PathVariable Long bookingId,
-                                                             @RequestParam Boolean approved) {
+    public ResponseEntity<?> approveBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                            @PathVariable Long bookingId,
+                                            @RequestParam Boolean approved) {
         System.out.println("=== CONTROLLER: approveBooking ===");
         System.out.println("userId: " + userId);
         System.out.println("bookingId: " + bookingId);
@@ -51,9 +53,10 @@ public class BookingController {
         } catch (NotFoundException e) {
             System.out.println("NotFoundException: " + e.getMessage());
             return ResponseEntity.notFound().build();
-            // } catch (ForbiddenException e) {  // УДАЛИТЕ ЭТОТ БЛОК
-            //     System.out.println("ForbiddenException: " + e.getMessage());
-            //     return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (ForbiddenException e) {
+            System.out.println("ForbiddenException: " + e.getMessage());
+            Map<String, String> errorResponse = Map.of("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
         } catch (ValidationException e) {
             System.out.println("ValidationException: " + e.getMessage());
             return ResponseEntity.badRequest().build();
