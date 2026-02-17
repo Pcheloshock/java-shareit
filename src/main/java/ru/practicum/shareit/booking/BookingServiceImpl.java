@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.exception.BookingNotFoundException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
@@ -98,8 +99,8 @@ public class BookingServiceImpl implements BookingService {
         // Проверка, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
             System.out.println("User " + userId + " is not owner. Owner is: " + booking.getItem().getOwner().getId());
-            // Используем то же исключение, что и для несуществующего бронирования
-            throw new BookingNotFoundException("Бронирование не найдено");
+            // ИСПРАВЛЕНО: теперь выбрасываем ForbiddenException вместо BookingNotFoundException
+            throw new ForbiddenException("Только владелец может подтверждать бронирование");
         }
 
         // Проверка статуса

@@ -69,6 +69,13 @@ public class ErrorHandler {
         return new ErrorResponse("Отсутствует обязательный заголовок: " + e.getHeaderName());
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleForbiddenException(final ForbiddenException e) {
+        log.warn("Доступ запрещен: {}", e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleOtherExceptions(final Throwable e) {
