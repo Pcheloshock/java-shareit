@@ -120,16 +120,40 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingResponseDto getBookingById(Long userId, Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+        System.out.println("=== SERVICE: getBookingById called ===");
+        System.out.println("userId: " + userId);
+        System.out.println("bookingId: " + bookingId);
 
-        // Проверка, что пользователь - владелец вещи или автор бронирования
-        if (!booking.getBooker().getId().equals(userId) &&
-                !booking.getItem().getOwner().getId().equals(userId)) {
-            throw new NotFoundException("Нет доступа к информации о бронировании");
+        try {
+            Booking booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> {
+                        System.out.println("Booking not found with id: " + bookingId);
+                        return new NotFoundException("Бронирование не найдено");
+                    });
+
+            System.out.println("Booking found: " + booking.getId());
+            System.out.println("Booker id: " + booking.getBooker().getId());
+            System.out.println("Item owner id: " + booking.getItem().getOwner().getId());
+
+            // Проверка, что пользователь - владелец вещи или автор бронирования
+            if (!booking.getBooker().getId().equals(userId) &&
+                    !booking.getItem().getOwner().getId().equals(userId)) {
+                System.out.println("User " + userId + " has no access to this booking");
+                throw new NotFoundException("Нет доступа к информации о бронировании");
+            }
+
+            BookingResponseDto dto = BookingMapper.toBookingResponseDto(booking);
+            System.out.println("Returning dto with id: " + (dto != null ? dto.getId() : "null"));
+            return dto;
+
+        } catch (NotFoundException e) {
+            System.out.println("NotFoundException: " + e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Ошибка при получении информации о бронировании", e);
         }
-
-        return BookingMapper.toBookingResponseDto(booking);
     }
 
     @Override

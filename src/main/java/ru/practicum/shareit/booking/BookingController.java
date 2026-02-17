@@ -74,6 +74,27 @@ public class BookingController {
         }
     }
 
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<BookingResponseDto> getBookingById(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                                             @PathVariable Long bookingId) {
+        System.out.println("=== CONTROLLER: getBookingById ===");
+        System.out.println("userId: " + userId);
+        System.out.println("bookingId: " + bookingId);
+
+        try {
+            BookingResponseDto result = bookingService.getBookingById(userId, bookingId);
+            System.out.println("Result: " + (result != null ? result.getId() : "null"));
+            return ResponseEntity.ok(result);
+        } catch (NotFoundException e) {
+            System.out.println("NotFoundException: " + e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/owner")
     public ResponseEntity<List<BookingResponseDto>> getOwnerBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                                      @RequestParam(defaultValue = "ALL") BookingState state) {
