@@ -73,7 +73,9 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleForbiddenException(final ForbiddenException e) {
         log.warn("Доступ запрещен: {}", e.getMessage());
-        return new ErrorResponse(e.getMessage());
+        ErrorResponse response = new ErrorResponse(e.getMessage());
+        log.info("Возвращаем ответ с телом: {}", response);
+        return response;
     }
 
     @ExceptionHandler
