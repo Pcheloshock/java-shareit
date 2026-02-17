@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.exception.BookingNotFoundException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
@@ -80,13 +81,12 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponseDto approveBooking(Long userId, Long bookingId, Boolean approved) {
         // Сначала проверяем существование бронирования
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+                .orElseThrow(() -> new BookingNotFoundException("Бронирование не найдено"));
 
         // Проверка, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // ВАЖНО: для этого теста нужно вернуть 404, а не 403
-            // Поэтому используем NotFoundException с соответствующим сообщением
-            throw new NotFoundException("Бронирование не найдено"); // Унифицированное сообщение
+            // Используем то же исключение, что и для несуществующего бронирования
+            throw new BookingNotFoundException("Бронирование не найдено");
         }
 
         // Проверка статуса
