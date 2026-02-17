@@ -52,9 +52,9 @@ public class BookingController {
         } catch (NotFoundException e) {
             System.out.println("NotFoundException: " + e.getMessage());
             return ResponseEntity.notFound().build();
-        } catch (ForbiddenException e) {  // Добавлено
-            System.out.println("ForbiddenException: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            // } catch (ForbiddenException e) {  // УДАЛИТЕ ЭТОТ БЛОК
+            //     System.out.println("ForbiddenException: " + e.getMessage());
+            //     return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ValidationException e) {
             System.out.println("ValidationException: " + e.getMessage());
             return ResponseEntity.badRequest().build();
