@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
-import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingMapper;
+import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -15,9 +15,9 @@ import ru.practicum.shareit.item.dto.CreateCommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.item.model.Comment;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
+import ru.practicum.shareit.item.model.Item;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -96,12 +96,10 @@ public class ItemServiceImpl implements ItemService {
 
         ItemWithBookingsDto dto = toItemWithBookingsDto(item);
 
-        // Если пользователь - владелец вещи, добавляем информацию о бронированиях
         if (item.getOwner().getId().equals(userId)) {
             addBookingInfo(dto, itemId);
         }
 
-        // Добавляем комментарии для всех пользователей
         addCommentsInfo(dto, itemId);
 
         log.info("Информация о вещи ID: {} успешно получена", itemId);
@@ -130,7 +128,6 @@ public class ItemServiceImpl implements ItemService {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        // Получаем все вещи владельца
         List<Item> items = itemRepository.findByOwnerId(ownerId);
 
         if (items.isEmpty()) {
@@ -143,44 +140,33 @@ public class ItemServiceImpl implements ItemService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Получаем все последние бронирования для всех вещей одним запросом
         List<Booking> lastBookings = bookingRepository.findLastBookingsForItems(itemIds, now);
-
-        // Получаем все следующие бронирования для всех вещей одним запросом
         List<Booking> nextBookings = bookingRepository.findNextBookingsForItems(itemIds, now);
-
-        // Получаем все комментарии для всех вещей одним запросом
         List<Comment> comments = commentRepository.findByItemIdInWithAuthor(itemIds);
 
-        // Группируем бронирования по itemId
         Map<Long, List<Booking>> lastBookingsByItemId = lastBookings.stream()
                 .collect(Collectors.groupingBy(b -> b.getItem().getId()));
 
         Map<Long, List<Booking>> nextBookingsByItemId = nextBookings.stream()
                 .collect(Collectors.groupingBy(b -> b.getItem().getId()));
 
-        // Группируем комментарии по itemId
         Map<Long, List<Comment>> commentsByItemId = comments.stream()
                 .collect(Collectors.groupingBy(c -> c.getItem().getId()));
 
-        // Создаем DTO с данными
         List<ItemWithBookingsDto> dtos = items.stream()
                 .map(item -> {
                     ItemWithBookingsDto dto = toItemWithBookingsDto(item);
 
-                    // Добавляем последнее бронирование
                     List<Booking> itemLastBookings = lastBookingsByItemId.get(item.getId());
                     if (itemLastBookings != null && !itemLastBookings.isEmpty()) {
                         dto.setLastBooking(BookingMapper.toSimpleDto(itemLastBookings.get(0)));
                     }
 
-                    // Добавляем следующее бронирование
                     List<Booking> itemNextBookings = nextBookingsByItemId.get(item.getId());
                     if (itemNextBookings != null && !itemNextBookings.isEmpty()) {
                         dto.setNextBooking(BookingMapper.toSimpleDto(itemNextBookings.get(0)));
                     }
 
-                    // Добавляем комментарии
                     List<Comment> itemComments = commentsByItemId.get(item.getId());
                     if (itemComments != null) {
                         dto.setComments(CommentMapper.toCommentDtoList(itemComments));
@@ -216,9 +202,6 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public CommentDto addComment(Long userId, Long itemId, CreateCommentDto commentDto) {
         log.info("Добавление комментария к вещи ID: {} пользователем ID: {}", itemId, userId);
-
-        // Валидация текста комментария выполняется в контроллере через @Valid
-        // Здесь проверяем только бизнес-логику
 
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));

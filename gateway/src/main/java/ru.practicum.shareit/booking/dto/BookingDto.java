@@ -28,5 +28,5 @@ public class BookingDto {
     private Long itemId;
 
     private Long bookerId;
-    private BookingStatus status;
+    private BookingStatus status;  // теперь найдёт класс
 }

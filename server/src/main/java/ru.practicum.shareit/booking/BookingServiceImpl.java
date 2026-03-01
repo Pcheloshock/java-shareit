@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.exception.BookingNotFoundException;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -102,7 +103,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getUserBookings(Long userId, BookingState state) {
+    public List<BookingDto> getUserBookings(Long userId, ru.practicum.shareit.booking.dto.BookingState state) {
         log.info("Получение бронирований пользователя ID: {} со статусом: {}", userId, state);
 
         userRepository.findById(userId)
@@ -146,7 +147,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getOwnerBookings(Long userId, BookingState state) {
+    public List<BookingDto> getOwnerBookings(Long userId, ru.practicum.shareit.booking.dto.BookingState state) {
         log.info("Получение бронирований вещей владельца ID: {} со статусом: {}", userId, state);
 
         userRepository.findById(userId)

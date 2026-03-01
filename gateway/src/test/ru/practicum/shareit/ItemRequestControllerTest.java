@@ -9,8 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.item.dto.CreateItemRequestDto;
-import ru.practicum.shareit.item.ItemRequestClient;
-import ru.practicum.shareit.item.ItemRequestController;
+import ru.practicum.shareit.request.ItemRequestClient;
+import ru.practicum.shareit.request.ItemRequestController;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
