@@ -12,6 +12,7 @@ import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto createBooking(Long userId, BookingDto bookingDto) {
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-        
+
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
@@ -41,7 +42,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (bookingDto.getStart().isAfter(bookingDto.getEnd()) ||
-            bookingDto.getStart().equals(bookingDto.getEnd())) {
+                bookingDto.getStart().equals(bookingDto.getEnd())) {
             throw new ValidationException("Некорректные даты бронирования");
         }
 
@@ -75,7 +76,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
         if (!booking.getBooker().getId().equals(userId) &&
-            !booking.getItem().getOwner().getId().equals(userId)) {
+                !booking.getItem().getOwner().getId().equals(userId)) {
             throw new NotFoundException("Нет доступа к бронированию");
         }
 
@@ -88,7 +89,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
-        
+
         return filterBookings(bookings, state).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -111,7 +112,7 @@ public class BookingServiceImpl implements BookingService {
 
     private List<Booking> filterBookings(List<Booking> bookings, BookingState state) {
         LocalDateTime now = LocalDateTime.now();
-        
+
         switch (state) {
             case CURRENT:
                 return bookings.stream()
