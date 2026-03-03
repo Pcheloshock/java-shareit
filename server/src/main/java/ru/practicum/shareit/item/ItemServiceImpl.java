@@ -26,7 +26,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public ItemDto createItem(Long userId, ItemDto itemDto) {
         log.info("Создание вещи пользователем ID: {}", userId);
-        
+
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -46,7 +46,7 @@ public class ItemServiceImpl implements ItemService {
 
         Item savedItem = itemRepository.save(item);
         log.info("Вещь создана с ID: {}", savedItem.getId());
-        
+
         return mapToDto(savedItem);
     }
 
@@ -54,7 +54,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         log.info("Обновление вещи ID: {} пользователем ID: {}", itemId, userId);
-        
+
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
@@ -78,17 +78,17 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemById(Long userId, Long itemId) {
         log.info("Получение вещи ID: {}", itemId);
-        
+
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
-        
+
         return mapToDto(item);
     }
 
     @Override
     public List<ItemDto> getItemsByOwner(Long ownerId) {
         log.info("Получение вещей владельца ID: {}", ownerId);
-        
+
         return itemRepository.findByOwnerId(ownerId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -97,11 +97,11 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> searchItems(String text) {
         log.info("Поиск вещей по тексту: {}", text);
-        
+
         if (text == null || text.isBlank()) {
             return List.of();
         }
-        
+
         String lowerText = text.toLowerCase();
         return itemRepository.findAll().stream()
                 .filter(item -> item.getAvailable() &&

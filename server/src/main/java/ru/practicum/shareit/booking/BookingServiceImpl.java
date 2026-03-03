@@ -11,7 +11,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
-    
     private final BookingRepository bookingRepository;
 
     @Override
