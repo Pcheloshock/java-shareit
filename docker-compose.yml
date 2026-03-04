@@ -48,6 +48,11 @@ services:
         condition: service_healthy
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:
