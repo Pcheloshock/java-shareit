@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.request.dto.CreateItemRequestDto;
@@ -14,6 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 class ItemRequestServiceImplIntegrationTest {
 
@@ -29,8 +31,14 @@ class ItemRequestServiceImplIntegrationTest {
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
-        user1 = userRepository.save(User.builder().name("User1").email("user1@example.com").build());
-        user2 = userRepository.save(User.builder().name("User2").email("user2@example.com").build());
+        user1 = userRepository.save(User.builder()
+                .name("User1")
+                .email("user1@example.com")
+                .build());
+        user2 = userRepository.save(User.builder()
+                .name("User2")
+                .email("user2@example.com")
+                .build());
     }
 
     @Test
@@ -68,7 +76,7 @@ class ItemRequestServiceImplIntegrationTest {
 
     @Test
     void getRequestById_ValidId_ReturnsRequest() {
-        ItemRequestDto created = requestService.createRequest(user1.getId(), 
+        ItemRequestDto created = requestService.createRequest(user1.getId(),
                 new CreateItemRequestDto("Need a drill"));
 
         ItemRequestDto found = requestService.getRequestById(user2.getId(), created.getId());
@@ -79,7 +87,7 @@ class ItemRequestServiceImplIntegrationTest {
 
     @Test
     void getRequestById_InvalidId_ThrowsException() {
-        assertThrows(NotFoundException.class, 
+        assertThrows(NotFoundException.class,
                 () -> requestService.getRequestById(user1.getId(), 999L));
     }
 }
