@@ -32,6 +32,11 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
       - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   gateway:
     build: gateway
@@ -40,7 +45,7 @@ services:
       - "8080:8080"
     depends_on:
       server:
-        condition: service_started
+        condition: service_healthy
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
 
