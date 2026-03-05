@@ -17,11 +17,9 @@ public class UserController {
     @PostMapping
     public UserDto createUser(@RequestBody UserDto userDto) {
         log.info("POST /users - создание пользователя");
-        
         if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
             throw new ValidationException("Email не может быть пустым");
         }
-        
         return userService.createUser(userDto);
     }
 
