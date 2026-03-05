@@ -1,12 +1,17 @@
 #!/bin/bash
 echo "Waiting for gateway to be ready..."
-for i in {1..30}; do
-  if curl -s http://localhost:8080/actuator/health > /dev/null; then
+MAX_RETRIES=90
+RETRY_COUNT=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+  if curl -s http://localhost:8080/actuator/health > /dev/null 2>&1; then
     echo "Gateway is ready!"
     exit 0
   fi
-  echo "Waiting... ($i/30)"
-  sleep 1
+  RETRY_COUNT=$((RETRY_COUNT + 1))
+  echo "Waiting for gateway... ($RETRY_COUNT/$MAX_RETRIES)"
+  sleep 2
 done
-echo "Timeout waiting for gateway"
+
+echo "Gateway not ready after $MAX_RETRIES attempts"
 exit 1
