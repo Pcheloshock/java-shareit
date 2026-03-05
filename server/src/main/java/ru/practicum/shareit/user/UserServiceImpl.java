@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.ConflictException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import java.util.List;
@@ -20,6 +21,15 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto createUser(UserDto userDto) {
         log.info("Создание пользователя");
+        
+        // Проверка на уникальность email
+        if (userDto.getEmail() != null) {
+            userRepository.findByEmail(userDto.getEmail())
+                .ifPresent(user -> {
+                    throw new ConflictException("Пользователь с email " + userDto.getEmail() + " уже существует");
+                });
+        }
+        
         User user = UserMapper.toUser(userDto);
         User savedUser = userRepository.save(user);
         return UserMapper.toUserDto(savedUser);
@@ -29,14 +39,21 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto updateUser(Long userId, UserDto userDto) {
         log.info("Обновление пользователя ID: {}", userId);
+        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
+        // Проверка на уникальность email при обновлении
+        if (userDto.getEmail() != null && !userDto.getEmail().equals(user.getEmail())) {
+            userRepository.findByEmail(userDto.getEmail())
+                .ifPresent(existingUser -> {
+                    throw new ConflictException("Пользователь с email " + userDto.getEmail() + " уже существует");
+                });
+            user.setEmail(userDto.getEmail());
+        }
+
         if (userDto.getName() != null) {
             user.setName(userDto.getName());
-        }
-        if (userDto.getEmail() != null) {
-            user.setEmail(userDto.getEmail());
         }
 
         return UserMapper.toUserDto(user);
