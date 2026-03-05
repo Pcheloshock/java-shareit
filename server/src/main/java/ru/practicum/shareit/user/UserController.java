@@ -3,6 +3,7 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 import java.util.List;
 
@@ -16,6 +17,11 @@ public class UserController {
     @PostMapping
     public UserDto createUser(@RequestBody UserDto userDto) {
         log.info("POST /users - создание пользователя");
+        
+        if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
+            throw new ValidationException("Email не может быть пустым");
+        }
+        
         return userService.createUser(userDto);
     }
 
