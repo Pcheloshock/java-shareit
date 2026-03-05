@@ -21,7 +21,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto createUser(UserDto userDto) {
         log.info("Создание пользователя");
-        
         // Проверка на уникальность email
         if (userDto.getEmail() != null) {
             userRepository.findByEmail(userDto.getEmail())
@@ -29,7 +28,6 @@ public class UserServiceImpl implements UserService {
                     throw new ConflictException("Пользователь с email " + userDto.getEmail() + " уже существует");
                 });
         }
-        
         User user = UserMapper.toUser(userDto);
         User savedUser = userRepository.save(user);
         return UserMapper.toUserDto(savedUser);
@@ -39,10 +37,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto updateUser(Long userId, UserDto userDto) {
         log.info("Обновление пользователя ID: {}", userId);
-        
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-
         // Проверка на уникальность email при обновлении
         if (userDto.getEmail() != null && !userDto.getEmail().equals(user.getEmail())) {
             userRepository.findByEmail(userDto.getEmail())
@@ -51,11 +47,9 @@ public class UserServiceImpl implements UserService {
                 });
             user.setEmail(userDto.getEmail());
         }
-
         if (userDto.getName() != null) {
             user.setName(userDto.getName());
         }
-
         return UserMapper.toUserDto(user);
     }
 
