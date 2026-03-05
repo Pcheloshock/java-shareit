@@ -1,4 +1,4 @@
 FROM eclipse-temurin:21-jre
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl netcat-openbsd && rm -rf /var/lib/apt/lists/*
 COPY target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "/app.jar", "--spring.profiles.active=docker"]
