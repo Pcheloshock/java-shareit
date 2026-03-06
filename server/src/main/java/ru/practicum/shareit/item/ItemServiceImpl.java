@@ -138,7 +138,6 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public CommentDto addComment(Long userId, Long itemId, CreateCommentDto commentDto) {
         log.info("Добавление комментария к вещи ID: {} пользователем ID: {}", itemId, userId);
-        
         if (commentDto.getText() == null || commentDto.getText().isBlank()) {
             throw new ValidationException("Текст комментария не может быть пустым");
         }
@@ -163,7 +162,6 @@ public class ItemServiceImpl implements ItemService {
                 .build();
         Comment savedComment = commentRepository.save(comment);
         log.info("Комментарий успешно добавлен с ID: {}", savedComment.getId());
-        
         return mapToCommentDto(savedComment);
     }
 
