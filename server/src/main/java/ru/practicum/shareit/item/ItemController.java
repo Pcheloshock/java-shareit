@@ -3,6 +3,7 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CreateCommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -28,6 +29,9 @@ public class ItemController {
                                  @PathVariable Long itemId,
                                  @RequestBody CreateCommentDto commentDto) {
         log.info("POST /items/{}/comment - добавление комментария пользователем ID: {}", itemId, userId);
+        if (commentDto.getText() == null || commentDto.getText().isBlank()) {
+            throw new ValidationException("Текст комментария не может быть пустым");
+        }
         return itemService.addComment(userId, itemId, commentDto);
     }
 
