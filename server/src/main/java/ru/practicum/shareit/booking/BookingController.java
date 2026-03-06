@@ -9,7 +9,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/bookings")
+@RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
 public class BookingController {
     private final BookingService bookingService;
@@ -17,7 +17,7 @@ public class BookingController {
     @PostMapping
     public BookingDto createBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                     @RequestBody BookingDto bookingDto) {
-        log.info("POST /bookings - создание бронирования");
+        log.info("POST /bookings - создание бронирования пользователем ID: {}", userId);
         return bookingService.createBooking(userId, bookingDto);
     }
 
@@ -39,14 +39,14 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getUserBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
                                             @RequestParam(defaultValue = "ALL") BookingState state) {
-        log.info("GET /bookings - получение бронирований пользователя");
+        log.info("GET /bookings - получение бронирований пользователя ID: {}", userId);
         return bookingService.getUserBookings(userId, state);
     }
 
     @GetMapping("/owner")
     public List<BookingDto> getOwnerBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
                                              @RequestParam(defaultValue = "ALL") BookingState state) {
-        log.info("GET /bookings/owner - получение бронирований владельца");
+        log.info("GET /bookings/owner - получение бронирований владельца ID: {}", userId);
         return bookingService.getOwnerBookings(userId, state);
     }
 }
