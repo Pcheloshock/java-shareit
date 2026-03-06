@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
-import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -95,13 +94,11 @@ public class ItemServiceImpl implements ItemService {
         if (item.getOwner().getId().equals(userId)) {
             // Добавляем информацию о бронированиях только для владельца
             LocalDateTime now = LocalDateTime.now();
-            
             // Последнее бронирование
             List<Booking> lastBookings = bookingRepository.findLastBookingsForItems(List.of(itemId), now);
             if (!lastBookings.isEmpty()) {
                 dto.setLastBooking(BookingMapper.toSimpleDto(lastBookings.get(0)));
             }
-            
             // Следующее бронирование
             List<Booking> nextBookings = bookingRepository.findNextBookingsForItems(List.of(itemId), now);
             if (!nextBookings.isEmpty()) {
