@@ -3,7 +3,10 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CreateCommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import java.util.List;
 
 @Slf4j
@@ -20,6 +23,14 @@ public class ItemController {
         return itemService.createItem(userId, itemDto);
     }
 
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @PathVariable Long itemId,
+                                 @RequestBody CreateCommentDto commentDto) {
+        log.info("POST /items/{}/comment - добавление комментария пользователем ID: {}", itemId, userId);
+        return itemService.addComment(userId, itemId, commentDto);
+    }
+
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @PathVariable Long itemId,
@@ -29,10 +40,10 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
-                               @PathVariable Long itemId) {
+    public ItemWithBookingsDto getItemById(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                           @PathVariable Long itemId) {
         log.info("GET /items/{} - получение вещи", itemId);
-        return itemService.getItemById(userId, itemId);
+        return itemService.getItemWithBookingsById(itemId, userId);
     }
 
     @GetMapping
