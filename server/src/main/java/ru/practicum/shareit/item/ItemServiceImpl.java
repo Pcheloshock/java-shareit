@@ -92,21 +92,17 @@ public class ItemServiceImpl implements ItemService {
         ItemWithBookingsDto dto = mapToWithBookingsDto(item);
 
         if (item.getOwner().getId().equals(userId)) {
-            // Добавляем информацию о бронированиях только для владельца
             LocalDateTime now = LocalDateTime.now();
-            // Последнее бронирование
             List<Booking> lastBookings = bookingRepository.findLastBookingsForItems(List.of(itemId), now);
             if (!lastBookings.isEmpty()) {
                 dto.setLastBooking(BookingMapper.toSimpleDto(lastBookings.get(0)));
             }
-            // Следующее бронирование
             List<Booking> nextBookings = bookingRepository.findNextBookingsForItems(List.of(itemId), now);
             if (!nextBookings.isEmpty()) {
                 dto.setNextBooking(BookingMapper.toSimpleDto(nextBookings.get(0)));
             }
         }
 
-        // Добавляем комментарии
         List<CommentDto> comments = commentRepository.findByItemId(itemId).stream()
                 .map(this::mapToCommentDto)
                 .collect(Collectors.toList());
@@ -142,12 +138,16 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public CommentDto addComment(Long userId, Long itemId, CreateCommentDto commentDto) {
         log.info("Добавление комментария к вещи ID: {} пользователем ID: {}", itemId, userId);
+        
+        if (commentDto.getText() == null || commentDto.getText().isBlank()) {
+            throw new ValidationException("Текст комментария не может быть пустым");
+        }
+
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        // Проверяем, что пользователь действительно брал вещь в аренду
         LocalDateTime now = LocalDateTime.now();
         boolean hasBooked = bookingRepository.existsByBookerIdAndItemIdAndEndBeforeAndStatus(
                 userId, itemId, now, BookingStatus.APPROVED);
@@ -162,6 +162,8 @@ public class ItemServiceImpl implements ItemService {
                 .created(now)
                 .build();
         Comment savedComment = commentRepository.save(comment);
+        log.info("Комментарий успешно добавлен с ID: {}", savedComment.getId());
+        
         return mapToCommentDto(savedComment);
     }
 
