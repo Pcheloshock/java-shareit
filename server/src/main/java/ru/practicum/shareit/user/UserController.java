@@ -19,15 +19,12 @@ public class UserController {
     @PostMapping
     public UserDto createUser(@RequestBody UserDto userDto) {
         log.info("POST /users - создание пользователя");
-        
         if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
             throw new ValidationException("Email не может быть пустым");
         }
-        
         if (!EMAIL_PATTERN.matcher(userDto.getEmail()).matches()) {
             throw new ValidationException("Некорректный формат email");
         }
-        
         return userService.createUser(userDto);
     }
 
@@ -35,12 +32,10 @@ public class UserController {
     public UserDto updateUser(@PathVariable Long userId,
                               @RequestBody UserDto userDto) {
         log.info("PATCH /users/{} - обновление пользователя", userId);
-        
-        if (userDto.getEmail() != null && !userDto.getEmail().isBlank() && 
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank() &&
             !EMAIL_PATTERN.matcher(userDto.getEmail()).matches()) {
             throw new ValidationException("Некорректный формат email");
         }
-        
         return userService.updateUser(userId, userDto);
     }
 
