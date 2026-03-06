@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RestController
@@ -13,13 +14,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
 
     @PostMapping
     public UserDto createUser(@RequestBody UserDto userDto) {
         log.info("POST /users - создание пользователя");
+        
         if (userDto.getEmail() == null || userDto.getEmail().isBlank()) {
             throw new ValidationException("Email не может быть пустым");
         }
+        
+        if (!EMAIL_PATTERN.matcher(userDto.getEmail()).matches()) {
+            throw new ValidationException("Некорректный формат email");
+        }
+        
         return userService.createUser(userDto);
     }
 
@@ -27,6 +35,12 @@ public class UserController {
     public UserDto updateUser(@PathVariable Long userId,
                               @RequestBody UserDto userDto) {
         log.info("PATCH /users/{} - обновление пользователя", userId);
+        
+        if (userDto.getEmail() != null && !userDto.getEmail().isBlank() && 
+            !EMAIL_PATTERN.matcher(userDto.getEmail()).matches()) {
+            throw new ValidationException("Некорректный формат email");
+        }
+        
         return userService.updateUser(userId, userDto);
     }
 
