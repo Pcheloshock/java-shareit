@@ -8,6 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -60,7 +61,7 @@ class ItemServiceImplIntegrationTest {
     }
 
     @Test
-    void getItemById_ValidId_ReturnsItem() {
+    void getItemWithBookingsById_ValidId_ReturnsItem() {
         ItemDto itemDto = ItemDto.builder()
                 .name("Drill")
                 .description("Powerful drill")
@@ -68,7 +69,7 @@ class ItemServiceImplIntegrationTest {
                 .build();
 
         ItemDto created = itemService.createItem(owner.getId(), itemDto);
-        ItemDto found = itemService.getItemById(owner.getId(), created.getId());
+        ItemWithBookingsDto found = itemService.getItemWithBookingsById(created.getId(), owner.getId());
 
         assertEquals(created.getId(), found.getId());
         assertEquals("Drill", found.getName());
