@@ -5,8 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.Item;
+import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.request.dto.CreateItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestWithItemsDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
@@ -21,6 +25,7 @@ import java.util.stream.Collectors;
 public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRequestRepository requestRepository;
     private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
 
     @Override
     @Transactional
@@ -43,7 +48,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public List<ItemRequestDto> getUserRequests(Long userId) {
+    public List<ItemRequestWithItemsDto> getUserRequests(Long userId) {
         log.info("Получение запросов пользователя ID: {}", userId);
 
         userRepository.findById(userId)
@@ -52,12 +57,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         List<ItemRequest> requests = requestRepository.findByRequesterIdOrderByCreatedDesc(userId);
 
         return requests.stream()
-                .map(this::mapToDto)
+                .map(this::mapToWithItemsDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ItemRequestDto> getAllRequests(Long userId) {
+    public List<ItemRequestWithItemsDto> getAllRequests(Long userId) {
         log.info("Получение всех запросов кроме запросов пользователя ID: {}", userId);
 
         userRepository.findById(userId)
@@ -66,12 +71,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         List<ItemRequest> requests = requestRepository.findAllOtherRequests(userId);
 
         return requests.stream()
-                .map(this::mapToDto)
+                .map(this::mapToWithItemsDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public ItemRequestDto getRequestById(Long userId, Long requestId) {
+    public ItemRequestWithItemsDto getRequestById(Long userId, Long requestId) {
         log.info("Получение запроса ID: {} пользователем ID: {}", requestId, userId);
 
         userRepository.findById(userId)
@@ -80,7 +85,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         ItemRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запрос не найден"));
 
-        return mapToDto(request);
+        return mapToWithItemsDto(request);
     }
 
     private ItemRequestDto mapToDto(ItemRequest request) {
@@ -88,6 +93,33 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                 .id(request.getId())
                 .description(request.getDescription())
                 .created(request.getCreated())
+                .build();
+    }
+
+    private ItemRequestWithItemsDto mapToWithItemsDto(ItemRequest request) {
+        List<Item> items = itemRepository.findAll().stream()
+                .filter(item -> item.getRequest() != null && item.getRequest().getId().equals(request.getId()))
+                .collect(Collectors.toList());
+
+        List<ItemDto> itemDtos = items.stream()
+                .map(this::mapToItemDto)
+                .collect(Collectors.toList());
+
+        return ItemRequestWithItemsDto.builder()
+                .id(request.getId())
+                .description(request.getDescription())
+                .created(request.getCreated())
+                .items(itemDtos)
+                .build();
+    }
+
+    private ItemDto mapToItemDto(Item item) {
+        return ItemDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
                 .build();
     }
 }

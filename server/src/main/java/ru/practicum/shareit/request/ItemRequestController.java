@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.CreateItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestWithItemsDto;
+
 import java.util.List;
 
 @Slf4j
@@ -22,19 +24,19 @@ public class ItemRequestController {
     }
 
     @GetMapping
-    public List<ItemRequestDto> getUserRequests(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemRequestWithItemsDto> getUserRequests(@RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("GET /requests - получение запросов пользователя ID: {}", userId);
         return requestService.getUserRequests(userId);
     }
 
     @GetMapping("/all")
-    public List<ItemRequestDto> getAllRequests(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemRequestWithItemsDto> getAllRequests(@RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("GET /requests/all - получение всех запросов пользователем ID: {}", userId);
         return requestService.getAllRequests(userId);
     }
 
     @GetMapping("/{requestId}")
-    public ItemRequestDto getRequestById(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemRequestWithItemsDto getRequestById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                          @PathVariable Long requestId) {
         log.info("GET /requests/{} - получение запроса пользователем ID: {}", requestId, userId);
         return requestService.getRequestById(userId, requestId);

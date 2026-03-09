@@ -9,9 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.request.dto.CreateItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestWithItemsDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
+
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -58,7 +61,7 @@ class ItemRequestServiceImplIntegrationTest {
         requestService.createRequest(user1.getId(), new CreateItemRequestDto("Request 2"));
         requestService.createRequest(user2.getId(), new CreateItemRequestDto("Request 3"));
 
-        List<ItemRequestDto> requests = requestService.getUserRequests(user1.getId());
+        List<ItemRequestWithItemsDto> requests = requestService.getUserRequests(user1.getId());
 
         assertEquals(2, requests.size());
     }
@@ -69,7 +72,7 @@ class ItemRequestServiceImplIntegrationTest {
         requestService.createRequest(user2.getId(), new CreateItemRequestDto("Request 2"));
         requestService.createRequest(user2.getId(), new CreateItemRequestDto("Request 3"));
 
-        List<ItemRequestDto> requests = requestService.getAllRequests(user1.getId());
+        List<ItemRequestWithItemsDto> requests = requestService.getAllRequests(user1.getId());
 
         assertEquals(2, requests.size());
     }
@@ -79,7 +82,7 @@ class ItemRequestServiceImplIntegrationTest {
         ItemRequestDto created = requestService.createRequest(user1.getId(),
                 new CreateItemRequestDto("Need a drill"));
 
-        ItemRequestDto found = requestService.getRequestById(user2.getId(), created.getId());
+        ItemRequestWithItemsDto found = requestService.getRequestById(user2.getId(), created.getId());
 
         assertEquals(created.getId(), found.getId());
         assertEquals("Need a drill", found.getDescription());
