@@ -32,40 +32,32 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto createBooking(Long userId, BookingDto bookingDto) {
         log.info("Создание бронирования пользователем ID: {}", userId);
 
-        // Проверяем пользователя
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        // Проверяем вещь
         Item item = itemRepository.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        // Проверяем, что владелец не бронирует свою вещь
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец не может забронировать свою вещь");
         }
 
-        // Проверяем доступность вещи
         if (!item.getAvailable()) {
             throw new ValidationException("Вещь недоступна для бронирования");
         }
 
-        // Проверяем даты
         if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
             throw new ValidationException("Даты начала и окончания должны быть указаны");
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        if (bookingDto.getStart().isBefore(now)) {
+        if (bookingDto.getStart().isAfter(bookingDto.getEnd()) || bookingDto.getStart().equals(bookingDto.getEnd())) {
+            throw new ValidationException("Некорректные даты бронирования");
+        }
+
+        if (bookingDto.getStart().isBefore(LocalDateTime.now())) {
             throw new ValidationException("Дата начала не может быть в прошлом");
         }
 
-        if (bookingDto.getEnd().isBefore(bookingDto.getStart()) || 
-            bookingDto.getEnd().equals(bookingDto.getStart())) {
-            throw new ValidationException("Дата окончания должна быть после даты начала");
-        }
-
-        // Создаем бронирование
         Booking booking = Booking.builder()
                 .start(bookingDto.getStart())
                 .end(bookingDto.getEnd())
@@ -74,14 +66,10 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        try {
-            Booking savedBooking = bookingRepository.save(booking);
-            log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
-            return mapToDto(savedBooking);
-        } catch (Exception e) {
-            log.error("Ошибка при сохранении бронирования: {}", e.getMessage());
-            throw new ValidationException("Ошибка при создании бронирования: " + e.getMessage());
-        }
+        Booking savedBooking = bookingRepository.save(booking);
+        log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
+
+        return mapToDto(savedBooking);
     }
 
     @Override
@@ -102,7 +90,6 @@ public class BookingServiceImpl implements BookingService {
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         Booking savedBooking = bookingRepository.save(booking);
-        log.info("Бронирование {} успешно обновлено", bookingId);
 
         return mapToDto(savedBooking);
     }
@@ -126,16 +113,13 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getUserBookings(Long userId, BookingState state) {
         log.info("Получение бронирований пользователя ID: {} со статусом: {}", userId, state);
 
-        // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
 
-        List<Booking> filteredBookings = filterBookingsByState(bookings, state, now);
-        return filteredBookings.stream()
+        return filterBookingsByState(bookings, state, now).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -144,10 +128,8 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getOwnerBookings(Long userId, BookingState state) {
         log.info("Получение бронирований вещей владельца ID: {} со статусом: {}", userId, state);
 
-        // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         List<Item> items = itemRepository.findByOwnerId(userId);
         List<Booking> bookings = items.stream()
@@ -155,8 +137,7 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
 
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> filteredBookings = filterBookingsByState(bookings, state, now);
-        return filteredBookings.stream()
+        return filterBookingsByState(bookings, state, now).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
