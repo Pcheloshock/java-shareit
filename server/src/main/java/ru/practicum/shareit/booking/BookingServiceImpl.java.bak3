@@ -45,7 +45,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Владелец не может забронировать свою вещь");
         }
 
-        // Проверяем доступность вещи - если вещь недоступна, выбрасываем ValidationException (400)
+        // Проверяем доступность вещи
         if (!item.getAvailable()) {
             throw new ValidationException("Вещь недоступна для бронирования");
         }
@@ -74,9 +74,14 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        Booking savedBooking = bookingRepository.save(booking);
-        log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
-        return mapToDto(savedBooking);
+        try {
+            Booking savedBooking = bookingRepository.save(booking);
+            log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
+            return mapToDto(savedBooking);
+        } catch (Exception e) {
+            log.error("Ошибка при сохранении бронирования: {}", e.getMessage());
+            throw new ValidationException("Ошибка при создании бронирования: " + e.getMessage());
+        }
     }
 
     @Override
@@ -106,11 +111,6 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto getBookingById(Long userId, Long bookingId) {
         log.info("Получение информации о бронировании ID: {} пользователем ID: {}", bookingId, userId);
 
-        // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
@@ -127,9 +127,8 @@ public class BookingServiceImpl implements BookingService {
         log.info("Получение бронирований пользователя ID: {} со статусом: {}", userId, state);
 
         // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
@@ -144,9 +143,8 @@ public class BookingServiceImpl implements BookingService {
         log.info("Получение бронирований вещей владельца ID: {} со статусом: {}", userId, state);
 
         // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         List<Item> items = itemRepository.findByOwnerId(userId);
         List<Booking> bookings = items.stream()
