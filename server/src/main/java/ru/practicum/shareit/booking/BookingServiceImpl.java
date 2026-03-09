@@ -17,6 +17,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,12 +42,24 @@ public class BookingServiceImpl implements BookingService {
                     .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
             log.debug("Пользователь найден: {}", booker);
 
-            // Получаем ID вещи из DTO (может быть в item.id или прямым полем)
-            Long itemId;
-            if (bookingDto.getItem() != null && bookingDto.getItem().getId() != null) {
+            // Получаем ID вещи из DTO - может быть в разных форматах
+            Long itemId = null;
+            
+            // Проверяем, если пришел Map (из gateway)
+            if (bookingDto instanceof Map) {
+                Map<String, Object> map = (Map<String, Object>) bookingDto;
+                if (map.containsKey("itemId")) {
+                    itemId = Long.valueOf(map.get("itemId").toString());
+                }
+            }
+            
+            // Если itemId не найден в Map, проверяем стандартные поля
+            if (itemId == null && bookingDto.getItem() != null && bookingDto.getItem().getId() != null) {
                 itemId = bookingDto.getItem().getId();
-            } else {
-                // Для обратной совместимости, если приходит старый формат
+            }
+
+            if (itemId == null) {
+                log.error("Не указан ID вещи в запросе");
                 throw new ValidationException("Не указан ID вещи");
             }
 
