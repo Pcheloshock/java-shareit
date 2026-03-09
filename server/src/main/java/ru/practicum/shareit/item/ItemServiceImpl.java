@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
@@ -96,11 +97,13 @@ public class ItemServiceImpl implements ItemService {
             LocalDateTime now = LocalDateTime.now();
             List<Booking> lastBookings = bookingRepository.findLastBookingsForItem(itemId, now);
             if (!lastBookings.isEmpty()) {
-                dto.setLastBooking(BookingMapper.toSimpleDto(lastBookings.get(0)));
+                BookingDto lastBookingDto = BookingMapper.toSimpleDto(lastBookings.get(0));
+                dto.setLastBooking(lastBookingDto);
             }
             List<Booking> nextBookings = bookingRepository.findNextBookingsForItem(itemId, now);
             if (!nextBookings.isEmpty()) {
-                dto.setNextBooking(BookingMapper.toSimpleDto(nextBookings.get(0)));
+                BookingDto nextBookingDto = BookingMapper.toSimpleDto(nextBookings.get(0));
+                dto.setNextBooking(nextBookingDto);
             }
         }
 

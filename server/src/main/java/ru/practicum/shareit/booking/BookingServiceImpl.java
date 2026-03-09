@@ -10,8 +10,10 @@ import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.Item;
 import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,8 +42,8 @@ public class BookingServiceImpl implements BookingService {
             log.debug("Пользователь найден: {}", booker);
 
             // Проверяем вещь
-            log.debug("Поиск вещи по ID: {}", bookingDto.getItemId());
-            Item item = itemRepository.findById(bookingDto.getItemId())
+            log.debug("Поиск вещи по ID: {}", bookingDto.getItem().getId());
+            Item item = itemRepository.findById(bookingDto.getItem().getId())
                     .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
             log.debug("Вещь найдена: {}, доступна: {}", item, item.getAvailable());
 
@@ -207,12 +209,25 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingDto mapToDto(Booking booking) {
+        ItemDto itemDto = ItemDto.builder()
+                .id(booking.getItem().getId())
+                .name(booking.getItem().getName())
+                .description(booking.getItem().getDescription())
+                .available(booking.getItem().getAvailable())
+                .build();
+
+        UserDto userDto = UserDto.builder()
+                .id(booking.getBooker().getId())
+                .name(booking.getBooker().getName())
+                .email(booking.getBooker().getEmail())
+                .build();
+
         return BookingDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
                 .end(booking.getEnd())
-                .itemId(booking.getItem().getId())
-                .bookerId(booking.getBooker().getId())
+                .item(itemDto)
+                .booker(userDto)
                 .status(booking.getStatus())
                 .build();
     }
