@@ -30,79 +30,53 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto createBooking(Long userId, BookingDto bookingDto) {
-        log.info("Создание бронирования пользователем ID: {}, данные бронирования: {}", userId, bookingDto);
+        log.info("Создание бронирования пользователем ID: {}", userId);
 
-        try {
-            // Проверяем пользователя
-            log.debug("Поиск пользователя по ID: {}", userId);
-            User booker = userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-            log.debug("Пользователь найден: {}", booker);
+        // Проверяем пользователя
+        User booker = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-            // Проверяем вещь
-            log.debug("Поиск вещи по ID: {}", bookingDto.getItemId());
-            Item item = itemRepository.findById(bookingDto.getItemId())
-                    .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
-            log.debug("Вещь найдена: {}, доступна: {}", item, item.getAvailable());
+        // Проверяем вещь
+        Item item = itemRepository.findById(bookingDto.getItemId())
+                .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-            // Проверяем, что владелец не бронирует свою вещь
-            if (item.getOwner().getId().equals(userId)) {
-                log.warn("Владелец пытается забронировать свою вещь. Владелец ID: {}, Пользователь ID: {}", 
-                         item.getOwner().getId(), userId);
-                throw new NotFoundException("Владелец не может забронировать свою вещь");
-            }
-
-            // Проверяем доступность вещи
-            if (!item.getAvailable()) {
-                log.warn("Попытка бронирования недоступной вещи. Item ID: {}", item.getId());
-                throw new ValidationException("Вещь недоступна для бронирования");
-            }
-
-            // Проверяем даты
-            if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
-                log.error("Даты начала или окончания не указаны. Start: {}, End: {}", 
-                         bookingDto.getStart(), bookingDto.getEnd());
-                throw new ValidationException("Даты начала и окончания должны быть указаны");
-            }
-
-            LocalDateTime now = LocalDateTime.now();
-            log.debug("Текущее время: {}, Время начала: {}", now, bookingDto.getStart());
-
-            if (bookingDto.getStart().isBefore(now)) {
-                log.warn("Дата начала в прошлом. Start: {}, Now: {}", bookingDto.getStart(), now);
-                throw new ValidationException("Дата начала не может быть в прошлом");
-            }
-
-            if (bookingDto.getEnd().isBefore(bookingDto.getStart()) ||
-                bookingDto.getEnd().equals(bookingDto.getStart())) {
-                log.warn("Некорректные даты. Start: {}, End: {}", bookingDto.getStart(), bookingDto.getEnd());
-                throw new ValidationException("Дата окончания должна быть после даты начала");
-            }
-
-            // Создаем бронирование
-            log.debug("Создание бронирования для item ID: {}, user ID: {}", item.getId(), booker.getId());
-            Booking booking = Booking.builder()
-                    .start(bookingDto.getStart())
-                    .end(bookingDto.getEnd())
-                    .item(item)
-                    .booker(booker)
-                    .status(BookingStatus.WAITING)
-                    .build();
-
-            Booking savedBooking = bookingRepository.save(booking);
-            log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
-            
-            BookingDto result = mapToDto(savedBooking);
-            log.debug("Результат: {}", result);
-            return result;
-            
-        } catch (NotFoundException | ValidationException e) {
-            log.error("Ошибка валидации при создании бронирования: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Непредвиденная ошибка при создании бронирования", e);
-            throw new RuntimeException("Ошибка при создании бронирования: " + e.getMessage(), e);
+        // Проверяем, что владелец не бронирует свою вещь
+        if (item.getOwner().getId().equals(userId)) {
+            throw new NotFoundException("Владелец не может забронировать свою вещь");
         }
+
+        // Проверяем доступность вещи
+        if (!item.getAvailable()) {
+            throw new ValidationException("Вещь недоступна для бронирования");
+        }
+
+        // Проверяем даты
+        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
+            throw new ValidationException("Даты начала и окончания должны быть указаны");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (bookingDto.getStart().isBefore(now)) {
+            throw new ValidationException("Дата начала не может быть в прошлом");
+        }
+
+        if (bookingDto.getEnd().isBefore(bookingDto.getStart()) ||
+            bookingDto.getEnd().equals(bookingDto.getStart())) {
+            throw new ValidationException("Дата окончания должна быть после даты начала");
+        }
+
+        // Создаем бронирование
+        Booking booking = Booking.builder()
+                .start(bookingDto.getStart())
+                .end(bookingDto.getEnd())
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Booking savedBooking = bookingRepository.save(booking);
+        log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
+        return mapToDto(savedBooking);
     }
 
     @Override
