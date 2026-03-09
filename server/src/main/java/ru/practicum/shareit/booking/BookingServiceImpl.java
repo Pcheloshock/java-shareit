@@ -41,9 +41,18 @@ public class BookingServiceImpl implements BookingService {
                     .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
             log.debug("Пользователь найден: {}", booker);
 
+            // Получаем ID вещи из DTO (может быть в item.id или прямым полем)
+            Long itemId;
+            if (bookingDto.getItem() != null && bookingDto.getItem().getId() != null) {
+                itemId = bookingDto.getItem().getId();
+            } else {
+                // Для обратной совместимости, если приходит старый формат
+                throw new ValidationException("Не указан ID вещи");
+            }
+
             // Проверяем вещь
-            log.debug("Поиск вещи по ID: {}", bookingDto.getItem().getId());
-            Item item = itemRepository.findById(bookingDto.getItem().getId())
+            log.debug("Поиск вещи по ID: {}", itemId);
+            Item item = itemRepository.findById(itemId)
                     .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
             log.debug("Вещь найдена: {}, доступна: {}", item, item.getAvailable());
 
