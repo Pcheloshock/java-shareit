@@ -44,7 +44,7 @@ public class BookingServiceImpl implements BookingService {
 
             // Получаем ID вещи из DTO - может быть в разных форматах
             Long itemId = null;
-            
+
             // Проверяем, если пришел Map (из gateway)
             if (bookingDto instanceof Map) {
                 Map<String, Object> map = (Map<String, Object>) bookingDto;
@@ -52,7 +52,7 @@ public class BookingServiceImpl implements BookingService {
                     itemId = Long.valueOf(map.get("itemId").toString());
                 }
             }
-            
+
             // Если itemId не найден в Map, проверяем стандартные поля
             if (itemId == null && bookingDto.getItem() != null && bookingDto.getItem().getId() != null) {
                 itemId = bookingDto.getItem().getId();
