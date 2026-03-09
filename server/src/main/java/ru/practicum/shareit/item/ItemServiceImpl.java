@@ -93,11 +93,11 @@ public class ItemServiceImpl implements ItemService {
 
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
-            List<Booking> lastBookings = bookingRepository.findLastBookingsForItems(List.of(itemId), now);
+            List<Booking> lastBookings = bookingRepository.findLastBookingsForItem(itemId, now);
             if (!lastBookings.isEmpty()) {
                 dto.setLastBooking(BookingMapper.toSimpleDto(lastBookings.get(0)));
             }
-            List<Booking> nextBookings = bookingRepository.findNextBookingsForItems(List.of(itemId), now);
+            List<Booking> nextBookings = bookingRepository.findNextBookingsForItem(itemId, now);
             if (!nextBookings.isEmpty()) {
                 dto.setNextBooking(BookingMapper.toSimpleDto(nextBookings.get(0)));
             }

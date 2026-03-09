@@ -45,7 +45,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Владелец не может забронировать свою вещь");
         }
 
-        // Проверяем доступность вещи - если вещь недоступна, выбрасываем ValidationException (400)
+        // Проверяем доступность вещи
         if (!item.getAvailable()) {
             throw new ValidationException("Вещь недоступна для бронирования");
         }
@@ -107,9 +107,8 @@ public class BookingServiceImpl implements BookingService {
         log.info("Получение информации о бронировании ID: {} пользователем ID: {}", bookingId, userId);
 
         // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
@@ -127,12 +126,11 @@ public class BookingServiceImpl implements BookingService {
         log.info("Получение бронирований пользователя ID: {} со статусом: {}", userId, state);
 
         // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> bookings = bookingRepository.findByBookerId(userId);
+        List<Booking> bookings = bookingRepository.findByBookerIdOrderByStartDesc(userId);
 
         return filterBookingsByState(bookings, state, now).stream()
                 .map(this::mapToDto)
@@ -144,16 +142,12 @@ public class BookingServiceImpl implements BookingService {
         log.info("Получение бронирований вещей владельца ID: {} со статусом: {}", userId, state);
 
         // Проверяем существование пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        List<Item> items = itemRepository.findByOwnerId(userId);
-        List<Booking> bookings = items.stream()
-                .flatMap(item -> bookingRepository.findByBookerId(item.getId()).stream())
-                .collect(Collectors.toList());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         LocalDateTime now = LocalDateTime.now();
+        List<Booking> bookings = bookingRepository.findByItemOwnerId(userId);
+
         return filterBookingsByState(bookings, state, now).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
