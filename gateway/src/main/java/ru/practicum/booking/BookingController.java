@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.booking.dto.BookingDto;
+import ru.practicum.booking.dto.BookingRequestDto;
 import ru.practicum.booking.dto.BookingState;
 
 @Slf4j
@@ -17,9 +17,9 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<Object> createBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                @Valid @RequestBody BookingDto bookingDto) {
+                                                @Valid @RequestBody BookingRequestDto bookingRequestDto) {
         log.info("POST /bookings - создание бронирования пользователем ID: {}", userId);
-        return bookingClient.createBooking(userId, bookingDto);
+        return bookingClient.createBooking(userId, bookingRequestDto);
     }
 
     @PatchMapping("/{bookingId}")
