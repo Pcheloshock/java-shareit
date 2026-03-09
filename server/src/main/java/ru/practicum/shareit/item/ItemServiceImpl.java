@@ -139,7 +139,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public CommentDto addComment(Long userId, Long itemId, CreateCommentDto commentDto) {
         log.info("Добавление комментария к вещи ID: {} пользователем ID: {}", itemId, userId);
-        
+
         // Проверяем текст комментария
         if (commentDto.getText() == null || commentDto.getText().isBlank()) {
             throw new ValidationException("Текст комментария не может быть пустым");
@@ -148,19 +148,15 @@ public class ItemServiceImpl implements ItemService {
         // Проверяем пользователя
         User author = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-        
+
         // Проверяем вещь
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
         // Проверяем, что пользователь действительно арендовал эту вещь
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> completedBookings = bookingRepository.findByBookerIdOrderByStartDesc(userId);
-        
-        boolean hasCompletedBooking = completedBookings.stream()
-                .anyMatch(booking -> booking.getItem().getId().equals(itemId) 
-                        && booking.getStatus() == BookingStatus.APPROVED 
-                        && booking.getEnd().isBefore(now));
+        boolean hasCompletedBooking = bookingRepository.existsByBookerIdAndItemIdAndEndBeforeAndStatus(
+                userId, itemId, now, BookingStatus.APPROVED);
 
         if (!hasCompletedBooking) {
             throw new ValidationException("Пользователь может оставить комментарий только после завершения аренды");
@@ -173,10 +169,10 @@ public class ItemServiceImpl implements ItemService {
                 .author(author)
                 .created(now)
                 .build();
-        
+
         Comment savedComment = commentRepository.save(comment);
         log.info("Комментарий успешно добавлен с ID: {}", savedComment.getId());
-        
+
         return mapToCommentDto(savedComment);
     }
 
