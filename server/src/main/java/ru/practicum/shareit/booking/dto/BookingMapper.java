@@ -9,7 +9,7 @@ public class BookingMapper {
         if (booking == null) {
             return null;
         }
-        
+
         ItemDto itemDto = ItemDto.builder()
                 .id(booking.getItem().getId())
                 .name(booking.getItem().getName())
@@ -37,7 +37,7 @@ public class BookingMapper {
         if (booking == null) {
             return null;
         }
-        
+
         ItemDto itemDto = ItemDto.builder()
                 .id(booking.getItem().getId())
                 .name(booking.getItem().getName())
