@@ -47,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
 
             // Проверяем, что владелец не бронирует свою вещь
             if (item.getOwner().getId().equals(userId)) {
-                log.warn("Владелец пытается забронировать свою вещь. Владелец ID: {}, Пользователь ID: {}", 
+                log.warn("Владелец пытается забронировать свою вещь. Владелец ID: {}, Пользователь ID: {}",
                          item.getOwner().getId(), userId);
                 throw new NotFoundException("Владелец не может забронировать свою вещь");
             }
@@ -60,7 +60,7 @@ public class BookingServiceImpl implements BookingService {
 
             // Проверяем даты
             if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
-                log.error("Даты начала или окончания не указаны. Start: {}, End: {}", 
+                log.error("Даты начала или окончания не указаны. Start: {}, End: {}",
                          bookingDto.getStart(), bookingDto.getEnd());
                 throw new ValidationException("Даты начала и окончания должны быть указаны");
             }
@@ -91,11 +91,11 @@ public class BookingServiceImpl implements BookingService {
 
             Booking savedBooking = bookingRepository.save(booking);
             log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
-            
+
             BookingDto result = mapToDto(savedBooking);
             log.debug("Результат: {}", result);
             return result;
-            
+
         } catch (NotFoundException | ValidationException e) {
             log.error("Ошибка валидации при создании бронирования: {}", e.getMessage());
             throw e;
