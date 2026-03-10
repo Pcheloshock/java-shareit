@@ -166,8 +166,6 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Текст комментария не может быть пустым");
         }
 
-        log.info("Создание комментария: {}", text);
-
         // Создаем комментарий
         Comment comment = Comment.builder()
                 .text(text)
