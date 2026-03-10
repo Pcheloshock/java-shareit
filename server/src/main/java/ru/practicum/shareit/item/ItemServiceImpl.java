@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CreateCommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -149,11 +151,19 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        // Для тестов: разрешаем создавать комментарии с любым текстом
-        // Даже если текст пустой, создаем комментарий с текстом по умолчанию
+        // Проверяем, что пользователь брал эту вещь в аренду и бронирование завершено
+        LocalDateTime now = LocalDateTime.now();
+        boolean hasCompletedBooking = bookingRepository.existsByBookerIdAndItemIdAndEndBeforeAndStatus(
+                userId, itemId, now, BookingStatus.APPROVED);
+
+        if (!hasCompletedBooking) {
+            throw new ValidationException("Пользователь не может оставить отзыв, так как не брал эту вещь в аренду");
+        }
+
+        // Проверяем текст комментария
         String text = commentDto.getText();
         if (text == null || text.trim().isEmpty()) {
-            text = "Test comment";
+            throw new ValidationException("Текст комментария не может быть пустым");
         }
 
         log.info("Создание комментария: {}", text);

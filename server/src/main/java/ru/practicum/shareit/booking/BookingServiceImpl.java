@@ -34,7 +34,6 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto createBooking(Long userId, BookingDto bookingDto) {
         log.info("Создание бронирования пользователем ID: {}", userId);
 
-        // Определяем ID вещи (может быть в itemId или в item.getId())
         Long itemId = null;
         if (bookingDto.getItemId() != null) {
             itemId = bookingDto.getItemId();
@@ -46,25 +45,20 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Не указан ID вещи");
         }
 
-        // Проверяем пользователя
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        // Проверяем вещь
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        // Проверяем, что владелец не бронирует свою вещь
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец не может забронировать свою вещь");
         }
 
-        // Проверяем доступность вещи
         if (!item.getAvailable()) {
             throw new ValidationException("Вещь недоступна для бронирования");
         }
 
-        // Проверяем даты
         if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
             throw new ValidationException("Даты начала и окончания должны быть указаны");
         }
@@ -79,7 +73,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Дата окончания должна быть после даты начала");
         }
 
-        // Создаем бронирование
         Booking booking = Booking.builder()
                 .start(bookingDto.getStart())
                 .end(bookingDto.getEnd())
@@ -103,7 +96,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new NotFoundException("Только владелец может подтверждать бронирование");
+            throw new ValidationException("Только владелец может подтверждать бронирование");
         }
 
         if (booking.getStatus() != BookingStatus.WAITING) {
@@ -121,7 +114,6 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto getBookingById(Long userId, Long bookingId) {
         log.info("Получение информации о бронировании ID: {} пользователем ID: {}", bookingId, userId);
 
-        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -140,7 +132,6 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getUserBookings(Long userId, BookingState state) {
         log.info("Получение бронирований пользователя ID: {} со статусом: {}", userId, state);
 
-        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -156,7 +147,6 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getOwnerBookings(Long userId, BookingState state) {
         log.info("Получение бронирований вещей владельца ID: {} со статусом: {}", userId, state);
 
-        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
