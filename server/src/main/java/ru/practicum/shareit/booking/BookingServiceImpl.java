@@ -17,7 +17,6 @@ import ru.practicum.shareit.user.dto.UserDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -33,100 +32,66 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto createBooking(Long userId, BookingDto bookingDto) {
-        log.info("Создание бронирования пользователем ID: {}, данные бронирования: {}", userId, bookingDto);
+        log.info("Создание бронирования пользователем ID: {}", userId);
 
-        try {
-            // Проверяем пользователя
-            log.debug("Поиск пользователя по ID: {}", userId);
-            User booker = userRepository.findById(userId)
-                    .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
-            log.debug("Пользователь найден: {}", booker);
-
-            // Получаем ID вещи из DTO - может быть в разных форматах
-            Long itemId = null;
-
-            // Проверяем, если пришел Map (из gateway)
-            if (bookingDto instanceof Map) {
-                Map<String, Object> map = (Map<String, Object>) bookingDto;
-                if (map.containsKey("itemId")) {
-                    itemId = Long.valueOf(map.get("itemId").toString());
-                }
-            }
-
-            // Если itemId не найден в Map, проверяем стандартные поля
-            if (itemId == null && bookingDto.getItem() != null && bookingDto.getItem().getId() != null) {
-                itemId = bookingDto.getItem().getId();
-            }
-
-            if (itemId == null) {
-                log.error("Не указан ID вещи в запросе");
-                throw new ValidationException("Не указан ID вещи");
-            }
-
-            // Проверяем вещь
-            log.debug("Поиск вещи по ID: {}", itemId);
-            Item item = itemRepository.findById(itemId)
-                    .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
-            log.debug("Вещь найдена: {}, доступна: {}", item, item.getAvailable());
-
-            // Проверяем, что владелец не бронирует свою вещь
-            if (item.getOwner().getId().equals(userId)) {
-                log.warn("Владелец пытается забронировать свою вещь. Владелец ID: {}, Пользователь ID: {}",
-                         item.getOwner().getId(), userId);
-                throw new NotFoundException("Владелец не может забронировать свою вещь");
-            }
-
-            // Проверяем доступность вещи
-            if (!item.getAvailable()) {
-                log.warn("Попытка бронирования недоступной вещи. Item ID: {}", item.getId());
-                throw new ValidationException("Вещь недоступна для бронирования");
-            }
-
-            // Проверяем даты
-            if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
-                log.error("Даты начала или окончания не указаны. Start: {}, End: {}",
-                         bookingDto.getStart(), bookingDto.getEnd());
-                throw new ValidationException("Даты начала и окончания должны быть указаны");
-            }
-
-            LocalDateTime now = LocalDateTime.now();
-            log.debug("Текущее время: {}, Время начала: {}", now, bookingDto.getStart());
-
-            if (bookingDto.getStart().isBefore(now)) {
-                log.warn("Дата начала в прошлом. Start: {}, Now: {}", bookingDto.getStart(), now);
-                throw new ValidationException("Дата начала не может быть в прошлом");
-            }
-
-            if (bookingDto.getEnd().isBefore(bookingDto.getStart()) ||
-                bookingDto.getEnd().equals(bookingDto.getStart())) {
-                log.warn("Некорректные даты. Start: {}, End: {}", bookingDto.getStart(), bookingDto.getEnd());
-                throw new ValidationException("Дата окончания должна быть после даты начала");
-            }
-
-            // Создаем бронирование
-            log.debug("Создание бронирования для item ID: {}, user ID: {}", item.getId(), booker.getId());
-            Booking booking = Booking.builder()
-                    .start(bookingDto.getStart())
-                    .end(bookingDto.getEnd())
-                    .item(item)
-                    .booker(booker)
-                    .status(BookingStatus.WAITING)
-                    .build();
-
-            Booking savedBooking = bookingRepository.save(booking);
-            log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
-
-            BookingDto result = mapToDto(savedBooking);
-            log.debug("Результат: {}", result);
-            return result;
-
-        } catch (NotFoundException | ValidationException e) {
-            log.error("Ошибка валидации при создании бронирования: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Непредвиденная ошибка при создании бронирования", e);
-            throw new RuntimeException("Ошибка при создании бронирования: " + e.getMessage(), e);
+        // Определяем ID вещи (может быть в itemId или в item.getId())
+        Long itemId = null;
+        if (bookingDto.getItemId() != null) {
+            itemId = bookingDto.getItemId();
+        } else if (bookingDto.getItem() != null && bookingDto.getItem().getId() != null) {
+            itemId = bookingDto.getItem().getId();
         }
+
+        if (itemId == null) {
+            throw new ValidationException("Не указан ID вещи");
+        }
+
+        // Проверяем пользователя
+        User booker = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+
+        // Проверяем вещь
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+
+        // Проверяем, что владелец не бронирует свою вещь
+        if (item.getOwner().getId().equals(userId)) {
+            throw new NotFoundException("Владелец не может забронировать свою вещь");
+        }
+
+        // Проверяем доступность вещи
+        if (!item.getAvailable()) {
+            throw new ValidationException("Вещь недоступна для бронирования");
+        }
+
+        // Проверяем даты
+        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
+            throw new ValidationException("Даты начала и окончания должны быть указаны");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (bookingDto.getStart().isBefore(now)) {
+            throw new ValidationException("Дата начала не может быть в прошлом");
+        }
+
+        if (bookingDto.getEnd().isBefore(bookingDto.getStart()) ||
+            bookingDto.getEnd().equals(bookingDto.getStart())) {
+            throw new ValidationException("Дата окончания должна быть после даты начала");
+        }
+
+        // Создаем бронирование
+        Booking booking = Booking.builder()
+                .start(bookingDto.getStart())
+                .end(bookingDto.getEnd())
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.WAITING)
+                .build();
+
+        Booking savedBooking = bookingRepository.save(booking);
+        log.info("Бронирование успешно создано с ID: {}", savedBooking.getId());
+
+        return mapToDto(savedBooking);
     }
 
     @Override
@@ -251,6 +216,8 @@ public class BookingServiceImpl implements BookingService {
                 .item(itemDto)
                 .booker(userDto)
                 .status(booking.getStatus())
+                .itemId(booking.getItem().getId())
+                .bookerId(booking.getBooker().getId())
                 .build();
     }
 }

@@ -20,4 +20,6 @@ public class BookingDto {
     private ItemDto item;
     private UserDto booker;
     private BookingStatus status;
+    private Long itemId;  // Добавляем для совместимости с gateway
+    private Long bookerId; // Добавляем для совместимости
 }
