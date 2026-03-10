@@ -67,14 +67,14 @@ public class ItemClient extends BaseClient {
         try {
             Object body = response.getBody();
             JsonNode node = objectMapper.valueToTree(body);
-            
+
             CommentResponseDto commentDto = CommentResponseDto.builder()
                     .id(node.has("id") ? node.get("id").asLong() : null)
                     .text(node.has("text") ? node.get("text").asText() : null)
                     .authorName(node.has("authorName") ? node.get("authorName").asText() : null)
                     .created(node.has("created") ? LocalDateTime.parse(node.get("created").asText(), DateTimeFormatter.ISO_DATE_TIME) : null)
                     .build();
-            
+
             return ResponseEntity.status(response.getStatusCode()).body(commentDto);
         } catch (Exception e) {
             return response;
