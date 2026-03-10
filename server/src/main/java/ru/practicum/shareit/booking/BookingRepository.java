@@ -11,7 +11,7 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Все бронирования пользователя
     List<Booking> findByBookerIdOrderByStartDesc(Long bookerId);
-    
+
     // Все бронирования пользователя (для обратной совместимости)
     default List<Booking> findByBookerId(Long bookerId) {
         return findByBookerIdOrderByStartDesc(bookerId);
