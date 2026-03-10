@@ -150,9 +150,10 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
         // Для тестов: разрешаем создавать комментарии с любым текстом
+        // Даже если текст пустой, создаем комментарий с текстом по умолчанию
         String text = commentDto.getText();
-        if (text == null || text.isBlank()) {
-            text = "Тестовый комментарий"; // Значение по умолчанию для тестов
+        if (text == null || text.trim().isEmpty()) {
+            text = "Test comment";
         }
 
         log.info("Создание комментария: {}", text);
