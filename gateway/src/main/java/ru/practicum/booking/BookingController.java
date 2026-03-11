@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.booking.dto.BookingRequestDto;
 import ru.practicum.booking.dto.BookingState;
+import ru.practicum.exception.ValidationException;
 
 @Slf4j
 @RestController
@@ -19,6 +20,13 @@ public class BookingController {
     public ResponseEntity<Object> createBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                 @Valid @RequestBody BookingRequestDto bookingRequestDto) {
         log.info("POST /bookings - создание бронирования пользователем ID: {}", userId);
+        
+        // Дополнительная валидация порядка дат
+        if (bookingRequestDto.getEnd().isBefore(bookingRequestDto.getStart()) ||
+            bookingRequestDto.getEnd().equals(bookingRequestDto.getStart())) {
+            throw new ValidationException("Дата окончания должна быть после даты начала");
+        }
+        
         return bookingClient.createBooking(userId, bookingRequestDto);
     }
 

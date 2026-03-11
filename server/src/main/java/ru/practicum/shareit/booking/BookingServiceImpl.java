@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingState;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.Item;
@@ -34,45 +35,32 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto createBooking(Long userId, BookingDto bookingDto) {
         log.info("Создание бронирования пользователем ID: {}", userId);
 
-        Long itemId = null;
-        if (bookingDto.getItemId() != null) {
-            itemId = bookingDto.getItemId();
-        } else if (bookingDto.getItem() != null && bookingDto.getItem().getId() != null) {
-            itemId = bookingDto.getItem().getId();
-        }
+        // Получаем ID вещи из DTO (приходит в поле itemId)
+        Long itemId = bookingDto.getItemId();
 
         if (itemId == null) {
             throw new ValidationException("Не указан ID вещи");
         }
 
+        // Проверяем пользователя
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
+        // Проверяем вещь
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
+        // Проверяем, что владелец не бронирует свою вещь
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец не может забронировать свою вещь");
         }
 
+        // Проверяем доступность вещи
         if (!item.getAvailable()) {
             throw new ValidationException("Вещь недоступна для бронирования");
         }
 
-        if (bookingDto.getStart() == null || bookingDto.getEnd() == null) {
-            throw new ValidationException("Даты начала и окончания должны быть указаны");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        if (bookingDto.getStart().isBefore(now)) {
-            throw new ValidationException("Дата начала не может быть в прошлом");
-        }
-
-        if (bookingDto.getEnd().isBefore(bookingDto.getStart()) ||
-            bookingDto.getEnd().equals(bookingDto.getStart())) {
-            throw new ValidationException("Дата окончания должна быть после даты начала");
-        }
-
+        // Создаем бронирование (даты уже проверены в gateway)
         Booking booking = Booking.builder()
                 .start(bookingDto.getStart())
                 .end(bookingDto.getEnd())
@@ -95,10 +83,12 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
+        // Проверяем, что пользователь является владельцем вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new ValidationException("Только владелец может подтверждать бронирование");
+            throw new ForbiddenException("Только владелец может подтверждать бронирование");
         }
 
+        // Проверяем статус бронирования
         if (booking.getStatus() != BookingStatus.WAITING) {
             throw new ValidationException("Бронирование уже обработано");
         }
@@ -122,7 +112,7 @@ public class BookingServiceImpl implements BookingService {
 
         if (!booking.getBooker().getId().equals(userId) &&
                 !booking.getItem().getOwner().getId().equals(userId)) {
-            throw new NotFoundException("Нет доступа к информации о бронировании");
+            throw new ForbiddenException("Нет доступа к информации о бронировании");
         }
 
         return mapToDto(booking);

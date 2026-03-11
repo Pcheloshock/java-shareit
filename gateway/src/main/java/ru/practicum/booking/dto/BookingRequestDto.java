@@ -14,8 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingRequestDto {
-    private Long id;
-
+    
     @NotNull(message = "Дата начала бронирования не может быть пустой")
     @FutureOrPresent(message = "Дата начала бронирования не может быть в прошлом")
     private LocalDateTime start;

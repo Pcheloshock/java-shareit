@@ -9,6 +9,7 @@ import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -40,6 +41,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     public ItemDto createItem(Long userId, ItemDto itemDto) {
         log.info("Создание вещи пользователем ID: {}", userId);
+        
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
@@ -49,28 +51,23 @@ public class ItemServiceImpl implements ItemService {
                     .orElseThrow(() -> new NotFoundException("Запрос не найден"));
         }
 
-        Item item = Item.builder()
-                .name(itemDto.getName())
-                .description(itemDto.getDescription())
-                .available(itemDto.getAvailable())
-                .owner(owner)
-                .request(request)
-                .build();
-
+        Item item = ItemMapper.toItem(itemDto, owner, request);
         Item savedItem = itemRepository.save(item);
         log.info("Вещь создана с ID: {}", savedItem.getId());
-        return mapToDto(savedItem);
+        
+        return ItemMapper.toItemDto(savedItem);
     }
 
     @Override
     @Transactional
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         log.info("Обновление вещи ID: {} пользователем ID: {}", itemId, userId);
+        
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
         if (!item.getOwner().getId().equals(userId)) {
-            throw new NotFoundException("Нет прав на редактирование");
+            throw new ForbiddenException("Нет прав на редактирование");
         }
 
         if (itemDto.getName() != null) {
@@ -82,24 +79,30 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null) {
             item.setAvailable(itemDto.getAvailable());
         }
-        return mapToDto(itemRepository.save(item));
+        
+        Item updatedItem = itemRepository.save(item);
+        return ItemMapper.toItemDto(updatedItem);
     }
 
     @Override
     public ItemWithBookingsDto getItemWithBookingsById(Long itemId, Long userId) {
         log.info("Получение вещи ID: {} пользователем ID: {}", itemId, userId);
+        
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
 
-        ItemWithBookingsDto dto = mapToWithBookingsDto(item);
+        ItemWithBookingsDto dto = ItemMapper.toItemWithBookingsDto(item);
 
+        // Добавляем информацию о бронированиях только для владельца
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
+            
             List<Booking> lastBookings = bookingRepository.findLastBookingsForItem(itemId, now);
             if (!lastBookings.isEmpty()) {
                 BookingDto lastBookingDto = BookingMapper.toSimpleDto(lastBookings.get(0));
                 dto.setLastBooking(lastBookingDto);
             }
+            
             List<Booking> nextBookings = bookingRepository.findNextBookingsForItem(itemId, now);
             if (!nextBookings.isEmpty()) {
                 BookingDto nextBookingDto = BookingMapper.toSimpleDto(nextBookings.get(0));
@@ -107,9 +110,8 @@ public class ItemServiceImpl implements ItemService {
             }
         }
 
-        List<CommentDto> comments = commentRepository.findByItemId(itemId).stream()
-                .map(this::mapToCommentDto)
-                .collect(Collectors.toList());
+        List<CommentDto> comments = ItemMapper.toCommentDtoList(
+                commentRepository.findByItemId(itemId));
         dto.setComments(comments);
 
         return dto;
@@ -118,23 +120,26 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getItemsByOwner(Long ownerId) {
         log.info("Получение вещей владельца ID: {}", ownerId);
+        
         return itemRepository.findByOwnerId(ownerId).stream()
-                .map(this::mapToDto)
+                .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ItemDto> searchItems(String text) {
         log.info("Поиск вещей по тексту: {}", text);
+        
         if (text == null || text.isBlank()) {
             return List.of();
         }
+        
         String lowerText = text.toLowerCase();
         return itemRepository.findAll().stream()
                 .filter(item -> item.getAvailable() &&
                         (item.getName().toLowerCase().contains(lowerText) ||
                          item.getDescription().toLowerCase().contains(lowerText)))
-                .map(this::mapToDto)
+                .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
 
@@ -167,45 +172,10 @@ public class ItemServiceImpl implements ItemService {
         }
 
         // Создаем комментарий
-        Comment comment = Comment.builder()
-                .text(text)
-                .item(item)
-                .author(author)
-                .created(LocalDateTime.now())
-                .build();
-
+        Comment comment = ItemMapper.toComment(commentDto, author, item);
         Comment savedComment = commentRepository.save(comment);
         log.info("Комментарий успешно добавлен с ID: {}", savedComment.getId());
 
-        return mapToCommentDto(savedComment);
-    }
-
-    private ItemDto mapToDto(Item item) {
-        return ItemDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.getAvailable())
-                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
-                .build();
-    }
-
-    private ItemWithBookingsDto mapToWithBookingsDto(Item item) {
-        return ItemWithBookingsDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.getAvailable())
-                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
-                .build();
-    }
-
-    private CommentDto mapToCommentDto(Comment comment) {
-        return CommentDto.builder()
-                .id(comment.getId())
-                .text(comment.getText())
-                .authorName(comment.getAuthor().getName())
-                .created(comment.getCreated())
-                .build();
+        return ItemMapper.toCommentDto(savedComment);
     }
 }
