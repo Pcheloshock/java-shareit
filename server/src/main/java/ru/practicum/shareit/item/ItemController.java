@@ -19,7 +19,6 @@ public class ItemController {
     public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @RequestBody ItemRequestDto itemRequestDto) {
         log.info("POST /items - создание вещи пользователем ID: {}", userId);
-        
         // Валидация
         if (itemRequestDto.getName() == null || itemRequestDto.getName().isBlank()) {
             throw new ValidationException("Название не может быть пустым");
@@ -30,7 +29,6 @@ public class ItemController {
         if (itemRequestDto.getAvailable() == null) {
             throw new ValidationException("Статус доступности должен быть указан");
         }
-        
         // Конвертируем в ItemDto для сервиса
         ItemDto itemDto = ItemDto.builder()
                 .name(itemRequestDto.getName())
@@ -38,7 +36,6 @@ public class ItemController {
                 .available(itemRequestDto.getAvailable())
                 .requestId(itemRequestDto.getRequestId())
                 .build();
-                
         return itemService.createItem(userId, itemDto);
     }
 
@@ -47,12 +44,10 @@ public class ItemController {
                                  @PathVariable Long itemId,
                                  @RequestBody CreateCommentDto commentDto) {
         log.info("POST /items/{}/comment - добавление комментария пользователем ID: {}", itemId, userId);
-        
         // Валидация
         if (commentDto.getText() == null || commentDto.getText().isBlank()) {
             throw new ValidationException("Текст комментария не может быть пустым");
         }
-        
         return itemService.addComment(userId, itemId, commentDto);
     }
 
@@ -61,14 +56,12 @@ public class ItemController {
                               @PathVariable Long itemId,
                               @RequestBody ItemUpdateDto itemUpdateDto) {
         log.info("PATCH /items/{} - обновление вещи", itemId);
-        
         // Конвертируем в ItemDto для сервиса (только переданные поля)
         ItemDto itemDto = ItemDto.builder()
                 .name(itemUpdateDto.getName())
                 .description(itemUpdateDto.getDescription())
                 .available(itemUpdateDto.getAvailable())
                 .build();
-                
         return itemService.updateItem(userId, itemId, itemDto);
     }
 
