@@ -20,13 +20,11 @@ public class BookingController {
     public ResponseEntity<Object> createBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                 @Valid @RequestBody BookingRequestDto bookingRequestDto) {
         log.info("POST /bookings - создание бронирования пользователем ID: {}", userId);
-        
         // Дополнительная валидация порядка дат
         if (bookingRequestDto.getEnd().isBefore(bookingRequestDto.getStart()) ||
             bookingRequestDto.getEnd().equals(bookingRequestDto.getStart())) {
             throw new ValidationException("Дата окончания должна быть после даты начала");
         }
-        
         return bookingClient.createBooking(userId, bookingRequestDto);
     }
 
