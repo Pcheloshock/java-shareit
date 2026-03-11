@@ -19,14 +19,11 @@ public class BookingController {
     public BookingDto createBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                     @RequestBody BookingRequestDto bookingRequestDto) {
         log.info("POST /bookings - создание бронирования");
-        
-        // Конвертируем BookingRequestDto в BookingDto для сервиса
         BookingDto bookingDto = BookingDto.builder()
                 .start(bookingRequestDto.getStart())
                 .end(bookingRequestDto.getEnd())
                 .itemId(bookingRequestDto.getItemId())
                 .build();
-                
         return bookingService.createBooking(userId, bookingDto);
     }
 
